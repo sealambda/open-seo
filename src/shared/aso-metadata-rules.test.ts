@@ -47,7 +47,11 @@ describe("validateAppMetadata: App Store", () => {
       name: "Streaks",
       subtitle: "Habit tracker",
       keywords: "routine,daily",
-      targetKeywords: ["daily habit tracker", "habit tracker for adhd"],
+      targetKeywords: [
+        "daily habit tracker",
+        "habit tracker for adhd",
+        "habits routine",
+      ],
     });
 
     expect(report.coverage).toEqual([
@@ -62,6 +66,13 @@ describe("validateAppMetadata: App Store", () => {
         covered: false,
         missingTokens: ["for", "adhd"],
         fields: ["subtitle"],
+      },
+      // Either number of a word counts, matching the possible_plural note.
+      {
+        keyword: "habits routine",
+        covered: true,
+        missingTokens: [],
+        fields: ["subtitle", "keywords"],
       },
     ]);
   });

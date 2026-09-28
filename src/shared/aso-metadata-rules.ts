@@ -84,12 +84,14 @@ type PlayInput = Extract<AppMetadataInput, { store: "google_play" }>;
 
 const COVERAGE_RULES: Record<AppStore, string> = {
   app_store:
-    "Heuristic: a phrase is covered when each of its words appears somewhere in the name, subtitle, keyword field or company name. Apple doesn't document how it combines fields; this is observed behavior.",
+    "Heuristic: a phrase is covered when each of its words, or its singular or plural form, appears somewhere in the name, subtitle, keyword field or company name. Apple doesn't document how it combines fields or matches plurals; this is observed behavior.",
   google_play:
     "A phrase is covered when it appears word for word in the title, short description or full description.",
 };
 
 type FieldRule = { field: AsoField; limit: number; unit: LengthUnit };
+
+const SHORT_FIELD_LIMIT = 100;
 
 const FIELD_RULES: Record<AppStore, FieldRule[]> = {
   app_store: [
@@ -175,7 +177,8 @@ function lengthReports(input: AppMetadataInput) {
         source: "store",
         field: rule.field,
         code: "over_limit",
-        message: `${length} ${rule.unit}, over the ${rule.limit}-${rule.unit === "bytes" ? "byte" : "character"} limit by ${length - rule.limit}.`,
+        // Short fields echo the value, so an escaping slip ("&amp;") shows.
+        message: `${rule.limit <= SHORT_FIELD_LIMIT ? `"${value}" is ` : ""}${length} ${rule.unit}, over the ${rule.limit}-${rule.unit === "bytes" ? "byte" : "character"} limit by ${length - rule.limit}.`,
       });
     }
   }
@@ -392,10 +395,20 @@ function coverageReport(input: AppMetadataInput) {
   });
   const issues: AsoIssue[] = [];
 
+  // The App Store rule (see COVERAGE_RULES) accepts either number of a word,
+  // consistent with the possible_plural note; Play matches words exactly.
+  const matches =
+    input.store === "app_store"
+      ? (a: string, b: string) =>
+          a === b || isPossiblePlural(a, b) || isPossiblePlural(b, a)
+      : (a: string, b: string) => a === b;
+  const has = (tokens: string[], token: string) =>
+    tokens.some((t) => matches(t, token));
+
   const coverage = [...targets.values()].map((keyword): KeywordCoverage => {
     const phrase = tokenize(keyword);
     const missingTokens = phrase.filter(
-      (token) => !fieldTokens.some(({ tokens }) => tokens.includes(token)),
+      (token) => !fieldTokens.some(({ tokens }) => has(tokens, token)),
     );
     if (input.store === "app_store") {
       return {
@@ -403,7 +416,7 @@ function coverageReport(input: AppMetadataInput) {
         covered: missingTokens.length === 0,
         missingTokens,
         fields: fieldTokens
-          .filter(({ tokens }) => phrase.some((t) => tokens.includes(t)))
+          .filter(({ tokens }) => phrase.some((t) => has(tokens, t)))
           .map(({ field }) => field),
       };
     }
