@@ -495,6 +495,36 @@ describe("mapDataforseoPathToCreditFeature", () => {
     }
   });
 
+  it("maps app store paths to aso, including Play Labs under google", () => {
+    expect(
+      mapDataforseoPathToCreditFeature([
+        "v3",
+        "dataforseo_labs",
+        "apple",
+        "keywords_for_app",
+        "live",
+      ]),
+    ).toBe("aso");
+    expect(
+      mapDataforseoPathToCreditFeature([
+        "v3",
+        "dataforseo_labs",
+        "google",
+        "app_competitors",
+        "live",
+      ]),
+    ).toBe("aso");
+    expect(
+      mapDataforseoPathToCreditFeature([
+        "v3",
+        "app_data",
+        "google",
+        "app_searches",
+        "task_post",
+      ]),
+    ).toBe("aso");
+  });
+
   it("maps local and supporting paths to the intended credit features", () => {
     expect(
       mapDataforseoPathToCreditFeature([

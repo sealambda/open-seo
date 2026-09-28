@@ -14,6 +14,14 @@ import {
   type DataforseoApiResponse,
 } from "@/server/lib/dataforseo/envelope";
 import {
+  fetchAppCompetitors,
+  fetchKeywordsForApp,
+} from "@/server/lib/dataforseo/app-labs";
+import {
+  postAppInfoTask,
+  postAppSearchTask,
+} from "@/server/lib/dataforseo/apps";
+import {
   fetchBusinessListingsSearch,
   fetchMyBusinessInfo,
   fetchQuestionsAnswers,
@@ -85,6 +93,14 @@ function meter<I, T>(
 
 export function createDataforseoClient(customer: BillingCustomerContext) {
   return {
+    apps: {
+      // task_post is where DataForSEO charges; collection runs unmetered
+      // through fetchAppDataTaskResult (see index.ts).
+      searchTaskPost: meter(customer, postAppSearchTask, "aso"),
+      infoTaskPost: meter(customer, postAppInfoTask, "aso"),
+      keywordsForApp: meter(customer, fetchKeywordsForApp, "aso"),
+      competitors: meter(customer, fetchAppCompetitors, "aso"),
+    },
     business: {
       businessListings: meter(
         customer,

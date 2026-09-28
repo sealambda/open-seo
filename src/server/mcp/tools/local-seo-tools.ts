@@ -5,12 +5,12 @@ import {
   fetchBusinessDataTaskResult,
   fetchBusinessListingsCategories,
   type BusinessTaskEndpoint,
-  type BusinessTaskOutcome,
 } from "@/server/lib/dataforseo";
 import { AppError } from "@/server/lib/errors";
 import { buildCacheKey, getCached, setCached } from "@/server/lib/r2-cache";
 import { buildProjectMeta } from "@/server/mcp/context";
 import { mcpResponse } from "@/server/mcp/formatters";
+import { pollQueuedTask } from "@/server/mcp/tools/queued-task";
 import {
   looseObjectOutputSchema,
   optionalMetaOutputSchema,
@@ -73,39 +73,6 @@ const businessLocationInputSchema = {
     ),
   languageCode: languageCodeSchema.optional(),
 } as const;
-
-// DataForSEO queues these tasks; high priority normally settles them inside the
-// poll window, and the tool hands back a resumable taskId when it doesn't.
-const TASK_POLL_ATTEMPTS = 6;
-const TASK_POLL_INTERVAL_MS = 4000;
-
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function pollBusinessTask(
-  input: { endpoint: BusinessTaskEndpoint; taskId: string },
-  publicTaskId: string,
-): Promise<BusinessTaskOutcome> {
-  try {
-    for (let attempt = 0; attempt < TASK_POLL_ATTEMPTS; attempt++) {
-      if (attempt > 0) await wait(TASK_POLL_INTERVAL_MS);
-      const outcome = await fetchBusinessDataTaskResult(input);
-      if (outcome.status === "completed") return outcome;
-    }
-    return { status: "pending", result: null };
-  } catch (error) {
-    // The task was already paid for at post; don't let a collection failure
-    // discard the only handle to it.
-    if (error instanceof AppError) {
-      throw new AppError(
-        error.code,
-        `${error.message} The queued task is still collectable — call again with taskId "${publicTaskId}" at no extra cost.`,
-      );
-    }
-    throw error;
-  }
-}
 
 function readString(source: unknown, key: string): string | null {
   const value = readPath(source, key);
@@ -406,7 +373,10 @@ export const getBusinessReviewsTool = {
       publicTaskId = encodeReviewsTaskId(includeOtherSources, postedId);
     }
 
-    const outcome = await pollBusinessTask(task, publicTaskId);
+    const outcome = await pollQueuedTask(
+      () => fetchBusinessDataTaskResult(task),
+      publicTaskId,
+    );
     if (outcome.status === "pending") {
       return mcpResponse({
         text: `Review collection is still running. Call get_business_reviews again with taskId "${publicTaskId}" in 30-60 seconds — resuming charges no extra credits.`,
@@ -539,8 +509,12 @@ export const getBusinessUpdatesTool = {
       });
     }
 
-    const outcome = await pollBusinessTask(
-      { endpoint: "my_business_updates", taskId },
+    const outcome = await pollQueuedTask(
+      () =>
+        fetchBusinessDataTaskResult({
+          endpoint: "my_business_updates",
+          taskId,
+        }),
       taskId,
     );
     if (outcome.status === "pending") {
