@@ -7,6 +7,8 @@ import {
 } from "@/server/mcp/output-schemas";
 import {
   APP_STORE_FIELDS,
+  APP_STORES,
+  STORE_LABELS,
   validateAppMetadata,
   type AppMetadataInput,
   type AppMetadataReport,
@@ -14,9 +16,7 @@ import {
 
 // Caps sit well above each store's limit so over-limit drafts still validate.
 const inputSchema = {
-  store: z
-    .enum(["app_store", "google_play"])
-    .describe("Which store's rules to apply."),
+  store: z.enum(APP_STORES).describe("Which store's rules to apply."),
   name: z
     .string()
     .max(300)
@@ -57,8 +57,6 @@ const inputSchema = {
 } as const;
 
 type Args = z.infer<z.ZodObject<typeof inputSchema>>;
-
-const STORE_LABELS = { app_store: "App Store", google_play: "Google Play" };
 
 function toMetadataInput(args: Args): AppMetadataInput {
   const allowed: readonly string[] = APP_STORE_FIELDS[args.store];
@@ -144,7 +142,7 @@ export const validateAppMetadataTool = {
       "Checks draft App Store or Google Play listing text against each store's published limits and rules, plus common ASO heuristics, and reports which target keywords it covers. Every issue is marked `store` (Apple or Google publishes the rule) or `heuristic` (practice the store doesn't document). Call it in a loop while drafting a name, subtitle and keyword field, or a Play title and descriptions, until errors are gone and coverage is where you want it. Space-delimited languages only. Uses no credits.",
     inputSchema,
     outputSchema: z.looseObject({
-      store: z.enum(["app_store", "google_play"]),
+      store: z.enum(APP_STORES),
       fields: z.array(looseObjectOutputSchema),
       issues: z.array(looseObjectOutputSchema),
       coverageRule: z.string(),

@@ -10,7 +10,14 @@
  * thresholds. Agents should weigh the two differently.
  */
 
-export type AppStore = "app_store" | "google_play";
+export const APP_STORES = ["app_store", "google_play"] as const;
+
+export type AppStore = (typeof APP_STORES)[number];
+
+export const STORE_LABELS: Record<AppStore, string> = {
+  app_store: "App Store",
+  google_play: "Google Play",
+};
 
 type AsoField =
   | "name"
