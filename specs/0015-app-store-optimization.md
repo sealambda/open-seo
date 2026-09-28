@@ -40,8 +40,8 @@ work in any country storefront. Keyword and competitor data come from
 DataForSEO Labs, which covers only the US store in English and refreshes about
 weekly. Before building, we checked both against the live stores:
 
-- App Store results matched Apple's own search in 8 to 10 of the top 10 apps,
-  and Play results matched the Play search page exactly.
+- App Store results matched Apple's public iTunes Search API in 8 to 10 of the
+  top 10 apps, and Play results matched the Play search page exactly.
 - The Play search page shows 30 results, so Play searches ask for 30. A deeper
   request returns nothing more.
 - Play listings come without the short description, and their descriptions
@@ -67,7 +67,7 @@ passes back to collect the result. Only the post is billed, so resuming is
 free. The `taskId` carries the store, so a resume can't read from the other
 store's queue.
 
-This is the same pattern as Google Business reviews, and the two features now
+This is the same pattern as Google Business reviews, and the two features
 share the post, collection and polling code.
 
 ## The validator
@@ -92,8 +92,9 @@ kind and weigh the second.
   flagged, because the Play policy names the title for those rules. The same
   words in a description are not flagged.
 - **Coverage.** On the App Store, a phrase counts as covered when each of its
-  words appears somewhere in the name, subtitle, keyword field or company
-  name. That is observed behavior, not documented, and the output says so. On
+  words, or its English singular or plural form, appears somewhere in the
+  name, subtitle, keyword field or company name. That is observed behavior,
+  not documented, and the output says so. On
   Google Play a phrase must appear word for word in one field, and a phrase
   repeated past a threshold is flagged as keyword stuffing.
 

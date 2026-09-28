@@ -3,7 +3,7 @@ title: "Install the OpenSEO plugin for Codex"
 description: "Add OpenSEO MCP and Agent Skills to Codex with one marketplace and one install command."
 ---
 
-The OpenSEO plugin bundles OpenSEO MCP and all ten SEO Agent Skills into one install. This is the preferred way to set up OpenSEO in Codex CLI.
+The OpenSEO plugin bundles OpenSEO MCP and all eleven SEO Agent Skills into one install. This is the preferred way to set up OpenSEO in Codex CLI.
 
 ## Install
 

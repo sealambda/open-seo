@@ -3,7 +3,7 @@ title: "Install the OpenSEO plugin for Claude Code"
 description: "Add OpenSEO MCP and Agent Skills to Claude Code with one marketplace and one install command."
 ---
 
-The OpenSEO plugin bundles OpenSEO MCP and all ten SEO Agent Skills into one install. This is the preferred way to set up OpenSEO in Claude Code.
+The OpenSEO plugin bundles OpenSEO MCP and all eleven SEO Agent Skills into one install. This is the preferred way to set up OpenSEO in Claude Code.
 
 ## Install
 

@@ -27,7 +27,7 @@ The first answer is a list of ideas. The second is a decision you can act on.
 
 ## How to set up Claude Code for SEO
 
-Two commands in Claude Code install the OpenSEO MCP server and all nine SEO agent skills:
+Two commands in Claude Code install the OpenSEO MCP server and all eleven SEO agent skills:
 
 ```
 /plugin marketplace add every-app/open-seo
