@@ -1,7 +1,7 @@
 # App Store optimization (ASO) plan
 
-Status: slice 0 done 2026-09-28 (see "Slice 0 results"); slices 1 and 2 in
-progress. Written 2026-09-26 against `main` at v0.1.9.
+Status: slices 0, 1 and 2 built 2026-09-28 (see "Slice 0 results" and spec
+0015); slice 3 is gated on demand. Written 2026-09-26 against `main` at v0.1.9.
 
 Sources: [issue #256](https://github.com/every-app/open-seo/issues/256) and the
 [proposal gist](https://gist.github.com/caloon/3553c682e963aba5099ec401b880f783)
@@ -151,7 +151,8 @@ store, drop store rank tracking from slice 3. Slices 1 and 2 go ahead either way
 
 ## Slice 0 results
 
-Run 2026-09-28 at normal priority (`priority: 1`). Total spend $0.091.
+Run 2026-09-28 at normal priority (`priority: 1`). Total spend $0.093,
+including a second pass that timed two tasks precisely.
 
 Inputs: keywords "photo editor" (head) and "habit tracker" (mid-tail) in the US
 and GB; Duolingo (`570060128`, `com.duolingo`) for app info in US/en and DE/de;
@@ -167,8 +168,10 @@ for competitors.
 | Labs `keywords_for_app`, limit 100 | 0.5–0.7 s  | 100 (335 Apple, 9,260 Play) | $0.024                  |
 | Labs `app_competitors`, limit 10   | 1.6 s      | 10                          | $0.0132                 |
 
-Turnaround is an upper bound: every task was done at the first poll, 15 s after
-the last post. `task_get` cost $0 in every case. Labs pricing works out to
+Turnaround in the table is an upper bound: every task was done at the first
+poll, 15 s after the last post. Polling every 2 s in a second pass measured
+4.5 s for Play `app_info` and 8.6 s for an Apple search, well inside a 20 s
+poll window. `task_get` cost $0 in every case. Labs pricing works out to
 $0.012 per request plus $0.00012 per returned row on both stores.
 
 Store search quality:
