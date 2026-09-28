@@ -155,7 +155,8 @@ export const validateAppMetadataTool = {
       destructiveHint: false,
     },
   },
-  handler: (args: Args) => {
+  // Async only to match the tool-handler shape SAM's adapter expects.
+  handler: async (args: Args) => {
     const report = validateAppMetadata(toMetadataInput(args));
     return mcpResponse({
       text: formatReport(report),

@@ -118,8 +118,9 @@ OpenSEO MCP tools cover workflows such as:
 - Backlink and referring-domain overview data for any domain, including competitors.
 - Google Search Console performance reads.
 - Google URL inspection reads.
+- App Store and Google Play research: store search results and public listings in any country storefront, and, for the US store only, the terms an app ranks for and its competitor apps. A free check of draft listing text against each store's rules.
 
-OpenSEO also provides agent skills for workflows such as SEO project setup, SEO coaching, keyword research, competitive landscape analysis, competitor analysis, keyword clustering, and link prospecting.
+OpenSEO also provides agent skills for workflows such as SEO project setup, SEO coaching, keyword research, competitive landscape analysis, competitor analysis, keyword clustering, link prospecting, and app store metadata.
 
 ## App workflows
 

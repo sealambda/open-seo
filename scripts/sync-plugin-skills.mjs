@@ -12,6 +12,7 @@ const sourceDir = join(repoRoot, ".agents/skills");
 const targetDir = join(repoRoot, "plugins/openseo/skills");
 
 const skills = [
+  "app-metadata-optimization",
   "competitive-landscape",
   "competitor-analysis",
   "keyword-clustering",
