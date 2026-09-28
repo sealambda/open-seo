@@ -24,13 +24,11 @@ export async function pollQueuedTask(
     return { status: "pending", result: null };
   } catch (error) {
     // The task was already paid for at post; don't let a collection failure
-    // discard the only handle to it.
-    if (error instanceof AppError) {
-      throw new AppError(
-        error.code,
-        `${error.message} The queued task is still collectable — call again with taskId "${publicTaskId}" at no extra cost.`,
-      );
-    }
-    throw error;
+    // discard the only handle to it, or the caller re-posts and pays again.
+    const isAppError = error instanceof AppError;
+    throw new AppError(
+      isAppError ? error.code : "UPSTREAM_UNAVAILABLE",
+      `${isAppError ? error.message : "Collecting the queued task failed."} The queued task is still collectable — call again with taskId "${publicTaskId}" at no extra cost.`,
+    );
   }
 }

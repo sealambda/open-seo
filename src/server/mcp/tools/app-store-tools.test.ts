@@ -26,6 +26,7 @@ vi.mock("@/server/lib/dataforseo", async () => {
     fetchAppDataTaskResult: mocks.fetchAppDataTaskResult,
     parseAppListing: apps.parseAppListing,
     parseAppSearchResult: apps.parseAppSearchResult,
+    LABS_APP_LANGUAGE_CODE: "en",
     LABS_APP_LOCATION_CODE: 2840,
   };
 });

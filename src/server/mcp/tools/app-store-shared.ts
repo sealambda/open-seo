@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { AppDataStore } from "@/server/lib/dataforseo";
 import { AppError } from "@/server/lib/errors";
-import type { AppStore } from "@/shared/aso-metadata-rules";
+import { APP_STORES, type AppStore } from "@/shared/aso-metadata-rules";
 
 // Plumbing shared by the app store tools (app-store-tools.ts for store
 // searches and listings, app-keyword-tools.ts for the US-only Labs data).
@@ -10,14 +10,8 @@ export const DATA_STORE: Record<AppStore, AppDataStore> = {
   app_store: "apple",
   google_play: "google",
 };
-export const STORE_LABELS: Record<AppStore, string> = {
-  app_store: "App Store",
-  google_play: "Google Play",
-};
 
-export const storeSchema = z
-  .enum(["app_store", "google_play"])
-  .describe("Which store to read.");
+export const storeSchema = z.enum(APP_STORES).describe("Which store to read.");
 
 export const appIdSchema = z
   .string()
@@ -44,8 +38,9 @@ export function normalizeAppId(store: AppStore, raw: string): string {
   );
 }
 
+// "—" for missing values, as formatMcpCell renders them.
 export const formatNumber = (value: unknown) =>
-  typeof value === "number" ? value.toLocaleString("en-US") : "-";
+  typeof value === "number" ? value.toLocaleString("en-US") : "—";
 
 export const meteredAnnotations = {
   readOnlyHint: false,

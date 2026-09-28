@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   createDataforseoClient,
+  LABS_APP_LANGUAGE_CODE,
   LABS_APP_LOCATION_CODE,
 } from "@/server/lib/dataforseo";
 import { buildProjectMeta } from "@/server/mcp/context";
@@ -18,9 +19,9 @@ import {
   formatNumber,
   meteredAnnotations,
   normalizeAppId,
-  STORE_LABELS,
   storeSchema,
 } from "@/server/mcp/tools/app-store-shared";
+import { STORE_LABELS } from "@/shared/aso-metadata-rules";
 
 // ---------------------------------------------------------------------------
 // get_app_ranking_keywords
@@ -118,7 +119,7 @@ export const getAppRankingKeywordsTool = {
         meta: buildProjectMeta(context, args.projectId, `/p/${args.projectId}`),
         structuredContent: {
           locationCode: LABS_APP_LOCATION_CODE,
-          languageCode: "en",
+          languageCode: LABS_APP_LANGUAGE_CODE,
           totalCount,
           keywords,
         },
@@ -198,7 +199,7 @@ export const findAppCompetitorsTool = {
       meta: buildProjectMeta(context, args.projectId, `/p/${args.projectId}`),
       structuredContent: {
         locationCode: LABS_APP_LOCATION_CODE,
-        languageCode: "en",
+        languageCode: LABS_APP_LANGUAGE_CODE,
         // Minus the app itself, which DataForSEO counts.
         totalCount: totalCount === null ? null : Math.max(totalCount - 1, 0),
         competitors: rows,

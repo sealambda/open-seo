@@ -1,3 +1,4 @@
+import { decodeHTML } from "entities";
 import { z } from "zod";
 import { dataforseoPost } from "@/server/lib/dataforseo/core";
 import type {
@@ -213,32 +214,6 @@ type AppListing = {
   similarApps: Array<{ appId: string; title: string | null }>;
 };
 
-const HTML_ENTITIES: Record<string, string> = {
-  amp: "&",
-  lt: "<",
-  gt: ">",
-  quot: '"',
-  apos: "'",
-  nbsp: " ",
-};
-
-/** Play descriptions arrive HTML-escaped ("&amp;"); decode in one pass. */
-function decodeHtmlEntities(value: string) {
-  return value.replace(
-    /&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,
-    (entity, name: string) => {
-      if (name.startsWith("#")) {
-        const code =
-          name[1]?.toLowerCase() === "x"
-            ? Number.parseInt(name.slice(2), 16)
-            : Number.parseInt(name.slice(1), 10);
-        return Number.isFinite(code) ? String.fromCodePoint(code) : entity;
-      }
-      return HTML_ENTITIES[name.toLowerCase()] ?? entity;
-    },
-  );
-}
-
 /** Shapes a collected app_info result into one listing (null if empty). */
 export function parseAppListing(
   store: AppDataStore,
@@ -266,7 +241,8 @@ export function parseAppListing(
     subtitle: app.subtitle ?? null,
     description:
       store === "google" && description !== null
-        ? decodeHtmlEntities(description)
+        ? // Play descriptions arrive HTML-escaped ("&amp;").
+          decodeHTML(description)
         : description,
     url: app.url ?? null,
     developer: app.developer ?? null,

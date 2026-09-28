@@ -15,7 +15,7 @@ import {
 
 /** The only market DataForSEO Labs has app data for. */
 export const LABS_APP_LOCATION_CODE = 2840;
-const LABS_APP_LANGUAGE_CODE = "en";
+export const LABS_APP_LANGUAGE_CODE = "en";
 
 const appKeywordItemSchema = z
   .object({
@@ -71,6 +71,8 @@ export async function fetchKeywordsForApp(input: {
         language_code: LABS_APP_LANGUAGE_CODE,
         limit: input.limit,
         offset: input.offset,
+        // DataForSEO's documented default; explicit so paging stays stable.
+        order_by: ["keyword_data.keyword_info.search_volume,desc"],
         filters:
           input.maxRank === undefined
             ? undefined

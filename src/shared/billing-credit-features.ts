@@ -27,12 +27,7 @@ const CREDIT_FEATURE_LABELS: Record<string, string> = {
   agent: "SAM Agent",
 };
 
-const LABS_APP_ENDPOINTS = new Set([
-  "keywords_for_app",
-  "app_competitors",
-  "app_intersection",
-  "bulk_app_metrics",
-]);
+const LABS_APP_ENDPOINTS = new Set(["keywords_for_app", "app_competitors"]);
 
 /**
  * Maps a DataForSEO API response path (e.g. ["v3", "dataforseo_labs", "google", "related_keywords", "live"])

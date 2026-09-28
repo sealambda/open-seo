@@ -29,11 +29,10 @@ import {
   formatNumber,
   meteredAnnotations,
   normalizeAppId,
-  STORE_LABELS,
   storeSchema,
 } from "@/server/mcp/tools/app-store-shared";
 import { pollQueuedTask } from "@/server/mcp/tools/queued-task";
-import type { AppStore } from "@/shared/aso-metadata-rules";
+import { STORE_LABELS, type AppStore } from "@/shared/aso-metadata-rules";
 
 // ---------------------------------------------------------------------------
 // Shared plumbing
@@ -117,7 +116,7 @@ const getAppStoreResultsInputSchema = {
     .max(700)
     .optional()
     .describe(
-      "App Store only: how many results to return, up to 700. Billed per 100, so anything up to 100 costs the same. Defaults to 100. Google Play always returns up to 30, the store's own limit.",
+      "How many results to return. App Store: up to 700, billed per 100, so anything up to 100 costs the same; defaults to 100. Google Play always fetches its store limit of 30 and returns up to that many.",
     ),
   taskId: taskIdSchema,
 } as const;

@@ -22,7 +22,10 @@ export { SERP_ANALYSIS_DEPTH } from "@/server/lib/dataforseo/serp";
 
 export { normalizeBacklinksTarget } from "@/server/lib/dataforseoBacklinksTarget";
 
-export { LABS_APP_LOCATION_CODE } from "@/server/lib/dataforseo/app-labs";
+export {
+  LABS_APP_LANGUAGE_CODE,
+  LABS_APP_LOCATION_CODE,
+} from "@/server/lib/dataforseo/app-labs";
 export {
   parseAppListing,
   parseAppSearchResult,
