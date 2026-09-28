@@ -1,6 +1,7 @@
 # App Store optimization (ASO) plan
 
-Status: planned, nothing built. Written 2026-09-26 against `main` at v0.1.9.
+Status: slice 0 done 2026-09-28 (see "Slice 0 results"); slices 1 and 2 in
+progress. Written 2026-09-26 against `main` at v0.1.9.
 
 Sources: [issue #256](https://github.com/every-app/open-seo/issues/256) and the
 [proposal gist](https://gist.github.com/caloon/3553c682e963aba5099ec401b880f783)
@@ -11,22 +12,23 @@ an API key.
 
 ## Verified facts
 
-### DataForSEO app endpoints (docs checked 2026-09-26)
+### DataForSEO app endpoints (docs checked 2026-09-26, prices confirmed 2026-09-28)
 
 | Endpoint                                       | Mode      | Coverage                                               | Billing unit                                | Standard price                       |
 | ---------------------------------------------- | --------- | ------------------------------------------------------ | ------------------------------------------- | ------------------------------------ |
 | `app_data/apple/app_searches`                  | task only | App Store locations (`/v3/app_data/apple/locations`)   | per 100 results; depth default 100, max 700 | $0.0012 / 100                        |
-| `app_data/google/app_searches`                 | task only | Play locations                                         | per 30 results; depth default 30, max 200   | not checked                          |
+| `app_data/google/app_searches`                 | task only | Play locations                                         | per 30 results; depth default 30, max 200   | $0.0012 / 30                         |
 | `app_data/apple/app_info`                      | task only | as above                                               | per result                                  | $0.0006                              |
-| `app_data/google/app_info`                     | task only | as above                                               | per result                                  | not checked                          |
+| `app_data/google/app_info`                     | task only | as above                                               | per result                                  | $0.0006                              |
 | `app_data/{apple,google}/app_listings/search`  | live      | DataForSEO's listing database, not a ranked store SERP | per task or per item                        | Apple $0.10 / task; Play not checked |
-| `dataforseo_labs/apple/keywords_for_app/live`  | live      | **US and English only**, updated weekly                | per request + per item                      | ~$0.011 / request                    |
-| `dataforseo_labs/google/keywords_for_app/live` | live      | **US and English only**, updated weekly                | per request + per item                      | ~$0.011 / request                    |
+| `dataforseo_labs/apple/keywords_for_app/live`  | live      | **US and English only**, updated weekly                | per request + per item                      | $0.012 / request + $0.00012 / row    |
+| `dataforseo_labs/google/keywords_for_app/live` | live      | **US and English only**, updated weekly                | per request + per item                      | $0.012 / request + $0.00012 / row    |
 
 - The Play Labs path segment is `google`, not `google_play`. The `google_play`
   docs URL returns 404.
 - Labs also has `app_competitors`, `app_intersection` and `bulk_app_metrics`
-  for both stores. Assume the same US-only limit and confirm in slice 0.
+  for both stores. The `app_competitors` docs list the same US and English
+  limit; assume it for the other two.
 - `keywords_for_app` returns `search_volume` (a vendor estimate with no
   published method), rank per keyword, and `last_updated_time`. Limit up to
   1,000 rows per request.
@@ -146,6 +148,81 @@ maintainer whether to summarize them on issue #256.
 
 Decision rule: if store search results are shallow, stale or don't match the
 store, drop store rank tracking from slice 3. Slices 1 and 2 go ahead either way.
+
+## Slice 0 results
+
+Run 2026-09-28 at normal priority (`priority: 1`). Total spend $0.091.
+
+Inputs: keywords "photo editor" (head) and "habit tracker" (mid-tail) in the US
+and GB; Duolingo (`570060128`, `com.duolingo`) for app info in US/en and DE/de;
+Todoist (`572688855`, `com.todoist`) for Labs, limit 100 for keywords and 10
+for competitors.
+
+| Call                               | Turnaround | Returned vs requested       | Cost per call           |
+| ---------------------------------- | ---------- | --------------------------- | ----------------------- |
+| Apple `app_searches`, depth 100    | ≤ 22 s     | 96–100 of 100               | $0.0012                 |
+| Play `app_searches`, depth 60      | ≤ 22 s     | 30, 30, 30, 22 of 60        | $0.0024 (billed for 60) |
+| Apple `app_info`                   | ≤ 22 s     | 1 item                      | $0.0006                 |
+| Play `app_info`                    | ≤ 22 s     | 1 item                      | $0.0006                 |
+| Labs `keywords_for_app`, limit 100 | 0.5–0.7 s  | 100 (335 Apple, 9,260 Play) | $0.024                  |
+| Labs `app_competitors`, limit 10   | 1.6 s      | 10                          | $0.0132                 |
+
+Turnaround is an upper bound: every task was done at the first poll, 15 s after
+the last post. `task_get` cost $0 in every case. Labs pricing works out to
+$0.012 per request plus $0.00012 per returned row on both stores.
+
+Store search quality:
+
+- Apple top 10 against the public iTunes Search API for the same term and
+  country: 8–10 of 10 apps in common, same top 1 in all four cases. US and GB
+  results differ, so storefronts are really separate.
+- Play top 10 against the public Play search page (`check_url`): identical order
+  in all four cases. The Play page itself only shows 30 results (22 for "photo
+  editor" in GB), so depth above 30 is billed and returns nothing more. Use depth
+  30 on Play.
+- `datetime` on each result is the crawl time, so results are fresh.
+
+`app_info` fields:
+
+| Field                        | Apple                       | Play                                                |
+| ---------------------------- | --------------------------- | --------------------------------------------------- |
+| title                        | localized                   | localized                                           |
+| subtitle / short description | `subtitle`, localized       | **not returned**                                    |
+| description                  | localized, plain text       | localized, **HTML-escaped** (`&amp;`)               |
+| category                     | **null** (`categories` too) | `main_category` and `genres`, localized             |
+| rating, reviews count        | per storefront              | rating per storefront, reviews count global         |
+| version                      | filled                      | **null** (size and minimum OS too)                  |
+| screenshots                  | `images`, 8                 | `images`, 16–24                                     |
+| other                        | `similar_apps`, `languages` | `installs`, `tags`, `similar_apps`, developer email |
+
+Labs:
+
+- `last_updated_time` spans 2026-09-09 to 2026-09-25 on Apple and 2026-08-27 to
+  2026-09-26 on Play: weekly-ish, and up to a month old per keyword.
+- Apple ranks go to 99. Play ranks stop at 29, which matches the 30-result Play
+  surface.
+- Play returns fragment keywords with large volumes ("s for" 129,951, "ta to"
+  11,523). Apple has fewer ("do to"). The tools must show these as the
+  vendor's data, not filter them silently.
+- `app_competitors` lists the target app itself first and returns app ids only,
+  no titles. The tool drops the self row, and an agent needs
+  `get_app_listing` to name competitors.
+- Play `app_searches` collects at `task_get/advanced/{id}` like Apple. The
+  Play docs page shows the path without `advanced`.
+
+Verdict: store search results are deep (up to the store's own limit), fresh and
+match the store. Store rank tracking stays in slice 3.
+
+What changes for slice 1:
+
+- Play store search depth is 30, not 60. The Play `app_searches` billing unit
+  is confirmed per 30 results.
+- Normal priority is fast enough for the poll-in-call pattern; don't pay for
+  `priority: 2`.
+- `validate_app_metadata` can't be fed a competitor's Play short description or
+  Apple keyword field, because neither is public in this data. Say so in the
+  tool and skill.
+- Decode HTML entities in Play descriptions before counting characters.
 
 ## Slice 1: agent tools, no new tables (a few days)
 
@@ -286,6 +363,5 @@ lean-worker bundle check green.
 
 - Do enough OpenSEO users publish apps? Read the onboarding answers before
   slice 3.
-- Play prices for store searches and app info.
 - Will DataForSEO extend Labs app data beyond the US? Until then, non-US
   keyword ideas have to come from listing text and store search results.
