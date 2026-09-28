@@ -3,7 +3,6 @@ import {
   createDataforseoClient,
   LABS_APP_LOCATION_CODE,
 } from "@/server/lib/dataforseo";
-import { AppError } from "@/server/lib/errors";
 import { buildProjectMeta } from "@/server/mcp/context";
 import { mcpResponse } from "@/server/mcp/formatters";
 import {
@@ -23,26 +22,19 @@ import {
   storeSchema,
 } from "@/server/mcp/tools/app-store-shared";
 
-/** Labs only has app data for the US store in English. */
-function assertUsStorefront(locationCode: number | undefined) {
-  if (locationCode !== undefined && locationCode !== LABS_APP_LOCATION_CODE) {
-    throw new AppError(
-      "VALIDATION_ERROR",
-      `DataForSEO only has app keyword data for the US store (location code ${LABS_APP_LOCATION_CODE}). For other storefronts, use get_app_store_results for rankings and get_app_listing for listing text.`,
-    );
-  }
-}
-
 // ---------------------------------------------------------------------------
 // get_app_ranking_keywords
 // ---------------------------------------------------------------------------
 
+// Labs only has app data for the US store in English. A literal puts that in
+// the JSON schema and rejects other markets before anything is billed.
 const usOnlyLocationSchema = z
-  .number()
-  .int()
+  .literal(LABS_APP_LOCATION_CODE, {
+    error: `DataForSEO only has app keyword data for the US store (location code ${LABS_APP_LOCATION_CODE}). For other storefronts, use get_app_store_results for rankings and get_app_listing for listing text.`,
+  })
   .optional()
   .describe(
-    `Only ${LABS_APP_LOCATION_CODE} (United States) is supported, and it is the default. Any other value is rejected.`,
+    `Only ${LABS_APP_LOCATION_CODE} (United States) is supported, and it is the default.`,
   );
 
 const getAppRankingKeywordsInputSchema = {
@@ -57,7 +49,21 @@ const getAppRankingKeywordsInputSchema = {
     .max(1000)
     .optional()
     .describe("Keywords to return, by estimated volume. Defaults to 100."),
-  offset: z.number().int().min(0).optional(),
+  offset: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Skip this many keywords, to page past `limit`."),
+  maxRank: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe(
+      "Only return keywords the app ranks at this position or better. Big apps rank low for many unrelated brand terms; 10 or 20 keeps the terms that matter.",
+    ),
 } as const;
 
 type GetAppRankingKeywordsArgs = z.infer<
@@ -80,7 +86,6 @@ export const getAppRankingKeywordsTool = {
   },
   handler: withMcpProjectAuth(
     async (args: GetAppRankingKeywordsArgs, context) => {
-      assertUsStorefront(args.locationCode);
       const appId = normalizeAppId(args.store, args.appId);
       const client = createDataforseoClient(context.billing);
       const { totalCount, keywords } = await client.apps.keywordsForApp({
@@ -88,12 +93,16 @@ export const getAppRankingKeywordsTool = {
         appId,
         limit: args.limit ?? 100,
         offset: args.offset,
+        maxRank: args.maxRank,
       });
-      const header = `${appId} ranks for ${formatNumber(totalCount)} terms in the US ${STORE_LABELS[args.store]}; showing ${keywords.length}. Volumes are DataForSEO estimates.`;
+      const within = args.maxRank
+        ? ` at position ${args.maxRank} or better`
+        : "";
+      const header = `${appId} ranks for ${formatNumber(totalCount)} terms${within} in the US ${STORE_LABELS[args.store]}; showing ${keywords.length}. Volumes are DataForSEO estimates.`;
       return mcpResponse({
         text:
           keywords.length === 0
-            ? `${header} DataForSEO has no ranking data for this app.`
+            ? `DataForSEO has no US ${STORE_LABELS[args.store]} ranking data for ${appId}.`
             : `${header}\n${formatMcpTable(keywords, [
                 { header: "keyword", value: (row) => row.keyword },
                 {
@@ -155,7 +164,6 @@ export const findAppCompetitorsTool = {
     annotations: meteredAnnotations,
   },
   handler: withMcpProjectAuth(async (args: FindAppCompetitorsArgs, context) => {
-    assertUsStorefront(args.locationCode);
     const appId = normalizeAppId(args.store, args.appId);
     const limit = args.limit ?? 20;
     const client = createDataforseoClient(context.billing);
@@ -172,7 +180,7 @@ export const findAppCompetitorsTool = {
     return mcpResponse({
       text:
         rows.length === 0
-          ? `${header} DataForSEO has no competitor data for this app.`
+          ? `DataForSEO has no US ${STORE_LABELS[args.store]} competitor data for ${appId}.`
           : `${header}\n${formatMcpTable(rows, [
               { header: "app id", value: (row) => row.appId },
               {
@@ -183,9 +191,9 @@ export const findAppCompetitorsTool = {
                 header: "avg position",
                 value: (row) => row.avgPosition?.toFixed(1) ?? null,
               },
-              { header: "#1", value: (row) => row.pos1 },
-              { header: "#2-3", value: (row) => row.pos2To3 },
-              { header: "#4-10", value: (row) => row.pos4To10 },
+              { header: "#1", value: (row) => formatNumber(row.pos1) },
+              { header: "#2-3", value: (row) => formatNumber(row.pos2To3) },
+              { header: "#4-10", value: (row) => formatNumber(row.pos4To10) },
             ])}`,
       meta: buildProjectMeta(context, args.projectId, `/p/${args.projectId}`),
       structuredContent: {

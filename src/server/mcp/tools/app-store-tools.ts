@@ -117,7 +117,7 @@ const getAppStoreResultsInputSchema = {
     .max(700)
     .optional()
     .describe(
-      "App Store only: how many results to collect, billed per 100. Defaults to 100. Google Play always returns up to 30, the store's own limit.",
+      "App Store only: how many results to return, up to 700. Billed per 100, so anything up to 100 costs the same. Defaults to 100. Google Play always returns up to 30, the store's own limit.",
     ),
   taskId: taskIdSchema,
 } as const;
@@ -128,21 +128,31 @@ type GetAppStoreResultsArgs = z.infer<
 
 type AppSearchRow = ReturnType<typeof parseAppSearchResult>["results"][number];
 
-const APP_SEARCH_COLUMNS: McpTableColumn<AppSearchRow>[] = [
-  { header: "#", value: (row) => row.rank },
-  { header: "app", value: (row) => row.title, format: truncatedCell(40) },
-  { header: "id", value: (row) => row.appId },
-  { header: "developer", value: (row) => row.developer },
-  { header: "rating", value: (row) => row.rating },
-  { header: "ratings", value: (row) => formatNumber(row.ratingCount) },
-];
+// Each store fills a different subset: App Store rows carry rating counts,
+// Play rows carry the developer.
+const APP_SEARCH_COLUMNS: Record<AppStore, McpTableColumn<AppSearchRow>[]> = {
+  app_store: [
+    { header: "#", value: (row) => row.rank },
+    { header: "app", value: (row) => row.title, format: truncatedCell(40) },
+    { header: "id", value: (row) => row.appId },
+    { header: "rating", value: (row) => row.rating },
+    { header: "ratings", value: (row) => formatNumber(row.ratingCount) },
+  ],
+  google_play: [
+    { header: "#", value: (row) => row.rank },
+    { header: "app", value: (row) => row.title, format: truncatedCell(40) },
+    { header: "id", value: (row) => row.appId },
+    { header: "developer", value: (row) => row.developer },
+    { header: "rating", value: (row) => row.rating },
+  ],
+};
 
 export const getAppStoreResultsTool = {
   name: "get_app_store_results",
   config: {
     title: "Get app store search results",
     description:
-      "Shows which apps rank for a search term in one App Store or Google Play storefront, in rank order. Works in any country storefront. Use it to see who you compete with for a term and where an app ranks. Usually completes within this call; if the queued job is still running you get status 'processing' plus a taskId — call again with that taskId in 30-60 seconds to collect the result at no extra cost. Charges credits.",
+      "Shows which apps rank for a search term in one App Store or Google Play storefront, in rank order. Works in any country storefront. App Store rows carry rating counts; Google Play rows carry the developer instead. Use it to see who you compete with for a term and where an app ranks. Usually completes within this call; if the queued job is still running you get status 'processing' plus a taskId — call again with that taskId in 30-60 seconds to collect the result at no extra cost. Charges credits.",
     inputSchema: getAppStoreResultsInputSchema,
     outputSchema: z.looseObject({
       status: z.enum(["completed", "processing"]),
@@ -196,17 +206,22 @@ export const getAppStoreResultsTool = {
     }
 
     const search = parseAppSearchResult(outcome.result);
-    const header = `${search.results.length} apps for "${search.keyword ?? args.keyword ?? ""}" (${storefrontLabel(args.store, search)}).`;
+    // DataForSEO returns a full billing unit of rows; show what was asked for.
+    const results = args.depth
+      ? search.results.slice(0, args.depth)
+      : search.results;
+    const header = `${results.length} apps for "${search.keyword ?? args.keyword ?? ""}" (${storefrontLabel(args.store, search)}).`;
     return mcpResponse({
       text:
-        search.results.length === 0
+        results.length === 0
           ? `${header} The store returned no apps for this term.`
-          : `${header}\n${formatMcpTable(search.results, APP_SEARCH_COLUMNS)}`,
+          : `${header}\n${formatMcpTable(results, APP_SEARCH_COLUMNS[args.store])}`,
       meta,
       structuredContent: {
         status: "completed",
         taskId: publicTaskId,
         ...search,
+        results,
       },
     });
   }),
@@ -236,7 +251,7 @@ const HIDDEN_FIELDS: Record<AppStore, string> = {
   app_store:
     "Not public, so not here: the App Store keyword field. Only the developer sees it in App Store Connect.",
   google_play:
-    "Not in this data: the Play short description. Ask the developer, or read it on the store page.",
+    "Not in this data: the Play short description. Ask the developer if you need it.",
 };
 
 export const getAppListingTool = {
@@ -296,7 +311,7 @@ export const getAppListingTool = {
     const { listing, ...storefront } = parseAppListing(store, outcome.result);
     if (!listing) {
       return mcpResponse({
-        text: `No listing found for that app in this storefront (${storefrontLabel(args.store, storefront)}). Check the id, or try the app's home country.`,
+        text: `No ${STORE_LABELS[args.store]} listing found for that app in this storefront. Check the id, or try the app's home country.`,
         meta,
         structuredContent: {
           status: "completed",

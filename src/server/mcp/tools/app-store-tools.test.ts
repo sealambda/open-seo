@@ -3,10 +3,7 @@ import type {
   parseAppListing as ParseAppListing,
   parseAppSearchResult as ParseAppSearchResult,
 } from "@/server/lib/dataforseo/apps";
-import {
-  findAppCompetitorsTool,
-  getAppRankingKeywordsTool,
-} from "./app-keyword-tools";
+import { findAppCompetitorsTool } from "./app-keyword-tools";
 import { getAppListingTool, getAppStoreResultsTool } from "./app-store-tools";
 import { makeToolContext } from "./tool-test-support";
 
@@ -150,25 +147,7 @@ describe("get_app_listing", () => {
   });
 });
 
-describe("US-only Labs app tools", () => {
-  it("rejects a non-US storefront before calling DataForSEO", async () => {
-    const keywordsForApp = vi.fn();
-    mocks.createDataforseoClient.mockReturnValue({ apps: { keywordsForApp } });
-
-    await expect(
-      getAppRankingKeywordsTool.handler(
-        {
-          projectId: "project_1",
-          store: "app_store",
-          appId: "570060128",
-          locationCode: 2826,
-        },
-        toolContext,
-      ),
-    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
-    expect(keywordsForApp).not.toHaveBeenCalled();
-  });
-
+describe("find_app_competitors", () => {
   it("drops the app itself from its competitors", async () => {
     const competitors = vi.fn().mockResolvedValue({
       totalCount: 3,

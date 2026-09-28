@@ -55,6 +55,7 @@ export async function fetchKeywordsForApp(input: {
   appId: string;
   limit: number;
   offset?: number;
+  maxRank?: number;
 }): Promise<
   DataforseoApiResponse<{
     totalCount: number | null;
@@ -70,6 +71,14 @@ export async function fetchKeywordsForApp(input: {
         language_code: LABS_APP_LANGUAGE_CODE,
         limit: input.limit,
         offset: input.offset,
+        filters:
+          input.maxRank === undefined
+            ? undefined
+            : [
+                "ranked_serp_element.serp_item.rank_absolute",
+                "<=",
+                input.maxRank,
+              ],
       },
     ],
   );
