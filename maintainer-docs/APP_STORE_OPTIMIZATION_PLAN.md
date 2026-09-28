@@ -229,7 +229,7 @@ What changes for slice 1:
 Everything here is stateless, so it ships without migrations.
 
 1. **`src/shared/aso-metadata-rules.ts`**, pure, no I/O:
-   - Field limits. Apple: name 30, subtitle 30, keyword field 100. Play: title
+   - Field limits. Apple: name 30, subtitle 30, keyword field 100 bytes (UTF-8). Play: title
      30, short description 80, full description 4,000.
    - Tokenizer, and repeated-token detection across fields.
    - Apple keyword field rules: comma-separated with no spaces; no tokens already
