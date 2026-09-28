@@ -229,6 +229,10 @@ What changes for slice 1:
 
 ## Slice 1: agent tools, no new tables (a few days)
 
+Built. Spec 0015 records what shipped, which differs from this outline in
+places: output schemas are inline in each tool, as in the rest of the MCP code,
+and the Labs tools accept the US location only as a schema literal.
+
 Everything here is stateless, so it ships without migrations.
 
 1. **`src/shared/aso-metadata-rules.ts`**, pure, no I/O:
@@ -282,6 +286,13 @@ Done when an agent can fetch a competitor's listing, get the US keywords an app
 ranks for, and produce a validated Apple keyword field for 20 target terms.
 
 ## Slice 2: landing-page audit checks (small)
+
+Built differently from this outline; spec 0015 has the shipped design. Both
+app link files are fetched after the crawl in their own step, not in discovery.
+A broken file is always reported, and only a missing one needs a page that
+promotes the app. The per-page signal rides on the crawl chunk results, so no
+`auditPages` column was added. Apple's current docs name no content type, so
+none is required for its file.
 
 - Page-level, in `page-analyzer.ts` and `page-reporters.ts`:
   - A malformed Smart App Banner (`<meta name="apple-itunes-app">`), including an
