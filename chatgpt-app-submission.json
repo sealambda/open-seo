@@ -380,6 +380,18 @@
         "destructive_justification": "May use metered research credits but does not delete, overwrite, revoke access, send, or publish anything."
       }
     },
+    "validate_app_metadata": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only checks the listing text passed in the call against store rules; uses no credits and makes no network requests.",
+        "open_world_justification": "Runs entirely inside OpenSEO on the supplied text and cannot change publicly visible internet state.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, send messages, or perform irreversible actions."
+      }
+    },
     "get_search_console_performance": {
       "annotations": {
         "readOnlyHint": true,
