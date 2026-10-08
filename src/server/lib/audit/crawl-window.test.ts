@@ -40,6 +40,8 @@ function page(
     images: [],
     links: [],
     hasStructuredData: false,
+    hasAppSchema: false,
+    smartAppBanner: null,
     hreflangTags: [],
     isIndexable: true,
     responseTimeMs,

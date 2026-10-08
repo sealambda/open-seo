@@ -1,4 +1,12 @@
 import {
+  fetchAppCompetitors,
+  fetchKeywordsForApp,
+} from "@/server/lib/dataforseo/app-labs";
+import {
+  postAppInfoTask,
+  postAppSearchTask,
+} from "@/server/lib/dataforseo/apps";
+import {
   fetchBusinessListingsSearch,
   fetchMyBusinessInfo,
   fetchQuestionsAnswers,
@@ -108,6 +116,14 @@ const EXTENDED_REVIEWS_PRIORITY_PER_20_USD = 0.01;
 const UPDATES_PRIORITY_TASK_USD = 0.003;
 const UPDATES_PRIORITY_PER_10_USD = 0.0015;
 
+// App Data task posts, standard queue (dataforseo.com/pricing/app-data):
+// app_searches bills per 100 results on Apple and per 30 on Google Play,
+// app_info per result. Labs app endpoints bill like the other Labs calls.
+const APP_SEARCH_PER_UNIT_USD = 0.0012;
+const APPLE_SEARCH_UNIT = 100;
+const PLAY_SEARCH_UNIT = 30;
+const APP_INFO_USD = 0.0006;
+
 // OnPage Lighthouse, live (dataforseo.com/pricing/on-page/lighthouse-api);
 // fixtures show $0.00425 billed.
 const LIGHTHOUSE_LIVE_USD = 0.005;
@@ -186,6 +202,21 @@ function daysInclusive(from: string, to: string) {
 
 /** One raw-USD upper-bound estimator per entry in createDataforseoClient. */
 export const dataforseoPricing = {
+  apps: {
+    searchTaskPost: priced(
+      postAppSearchTask,
+      (input) =>
+        Math.ceil(
+          input.depth /
+            (input.store === "apple" ? APPLE_SEARCH_UNIT : PLAY_SEARCH_UNIT),
+        ) * APP_SEARCH_PER_UNIT_USD,
+    ),
+    infoTaskPost: priced(postAppInfoTask, () => APP_INFO_USD),
+    keywordsForApp: priced(fetchKeywordsForApp, (input) =>
+      labsUsd(input.limit),
+    ),
+    competitors: priced(fetchAppCompetitors, (input) => labsUsd(input.limit)),
+  },
   business: {
     businessListings: priced(
       fetchBusinessListingsSearch,

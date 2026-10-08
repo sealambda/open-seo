@@ -24,9 +24,9 @@ import type { CrawlerAccess } from "@/shared/crawler-access";
 import type { RenderUsage } from "@/shared/audit-rendering";
 import { captureServerEvent } from "@/server/lib/posthog";
 import {
-  runCrawlPhase,
+  runCrawlAndAppLinks,
   type CrawlPhaseResult,
-} from "@/server/workflows/siteAuditWorkflowCrawl";
+} from "@/server/workflows/siteAuditAppLinks";
 import { pgStep } from "@/server/workflows/pgStep";
 import {
   DB_STEP,
@@ -86,7 +86,7 @@ export async function runAuditPhases(
   // robots rules the original run used (a live re-fetch could differ and
   // desync the frontier from already-persisted crawl batches).
   const robots = parseRobotsTxt(origin, discovery.robotsText);
-  const crawl = await runCrawlPhase(step, {
+  const crawl = await runCrawlAndAppLinks(step, {
     ...params,
     origin,
     maxPages,
@@ -379,7 +379,7 @@ async function finalizeAudit(args: {
       durationMs: Date.now() - linksStartedAt,
       issueCount: linkIssues.length,
     });
-    issues.push(...linkIssues);
+    issues.push(...linkIssues, ...crawl.appLinkIssues);
     if (crawl.stoppedBy) {
       issues.push({
         issueType: crawl.stoppedBy,

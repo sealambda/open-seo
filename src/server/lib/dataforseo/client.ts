@@ -80,7 +80,7 @@ import { AppError } from "@/server/lib/errors";
  * separate events, so a feature set only at settle reads as "Other". Callers
  * can override it with `creditFeature` in the input (fetchers ignore it).
  */
-function meter<I, T>(
+export function meter<I, T>(
   customer: BillingCustomerContext,
   fetcher: (input: I) => Promise<DataforseoApiResponse<T>>,
   estimateRawUsd: (input: I) => number,

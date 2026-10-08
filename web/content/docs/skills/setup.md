@@ -89,6 +89,7 @@ Use your agent's skill picker or ask for a workflow by name. In Codex, type `$`;
 - `competitor-analysis`
 - `link-prospecting`
 - `local-seo`
+- `app-metadata-optimization`
 - `seo-audit`
 
 ## Next step

@@ -92,6 +92,11 @@ export interface PageAnalysis {
 
   // Structured data
   hasStructuredData: boolean;
+  /** JSON-LD declares a SoftwareApplication, MobileApplication or VideoGame. */
+  hasAppSchema: boolean;
+
+  /** Raw `content` of `<meta name="apple-itunes-app">` (Safari's Smart App Banner). */
+  smartAppBanner: string | null;
 
   // Hreflang
   hreflangTags: string[];
@@ -169,6 +174,10 @@ export interface CrawledPageResult {
   images: Array<{ src: string | null; alt: string | null }>;
   links: PageLink[];
   hasStructuredData: boolean;
+  /** Transient — only the page reporters read it. */
+  hasAppSchema: boolean;
+  /** Transient — only the page reporters and the app signal fold read it. */
+  smartAppBanner: string | null;
   hreflangTags: string[];
   isIndexable: boolean;
   responseTimeMs: number;
