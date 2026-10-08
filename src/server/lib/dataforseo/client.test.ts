@@ -421,6 +421,9 @@ describe("mapDataforseoPathToCreditFeature", () => {
     ["v3/business_data/business_listings/search/live", "local_seo"],
     ["v3/serp/google/local_finder/live/advanced", "local_seo"],
     ["v3/serp/google/maps/live/advanced", "local_seo"],
+    ["v3/dataforseo_labs/apple/keywords_for_app/live", "aso"],
+    ["v3/dataforseo_labs/google/app_competitors/live", "aso"],
+    ["v3/app_data/google/app_searches/task_post", "aso"],
   ])("maps %s to %s", (path, feature) => {
     expect(mapDataforseoPathToCreditFeature(path.split("/"))).toBe(feature);
   });

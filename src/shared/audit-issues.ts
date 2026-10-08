@@ -248,6 +248,62 @@ export const AUDIT_ISSUE_TYPES = {
     howToFix:
       "If this page should rank on its own, set its canonical to itself. Otherwise no action is needed.",
   },
+  "malformed-smart-app-banner": {
+    severity: "warning",
+    title: "Malformed Smart App Banner",
+    explanation:
+      "The page's Smart App Banner tag (<meta name=\"apple-itunes-app\">) has no numeric app-id, which Apple requires, or its app-argument points at the home page even though this page is deeper. Apple suggests passing the page's own URL so people who open the app from here land on the same content.",
+    howToFix:
+      'Set the content to "app-id=YOUR_APP_ID", using the number after "id" in your App Store URL. If you add app-argument, make it this page\'s URL, or a URL your app can map back to this content.',
+  },
+  "app-banner-without-app-schema": {
+    severity: "info",
+    title: "App banner without app markup",
+    explanation:
+      "The page promotes an app with a Smart App Banner but has no SoftwareApplication, MobileApplication or VideoGame structured data. The markup states the app's name, platform, rating and price in a form search engines can read.",
+    howToFix:
+      "Add a JSON-LD SoftwareApplication (or MobileApplication) block describing the app, with at least its name, operatingSystem and applicationCategory. Keep the rating and price in it true to the store listing.",
+  },
+  "dead-firebase-dynamic-link": {
+    severity: "warning",
+    title: "Link to a shut-down Firebase Dynamic Link",
+    explanation:
+      "The page links to a *.page.link URL. Firebase Dynamic Links shut down on August 25, 2025, and every such link now returns a 404, so people who tap it never reach the app or the store.",
+    howToFix:
+      "Replace the link with a direct App Store or Google Play URL, or with a link on your own domain set up for Universal Links and Android App Links. Links on a custom Firebase Dynamic Links domain broke too, but the audit can't recognize those.",
+  },
+  "apple-app-site-association-invalid": {
+    severity: "warning",
+    title: "Broken apple-app-site-association file",
+    explanation:
+      "The site serves /.well-known/apple-app-site-association, but it redirects, isn't valid JSON, or declares none of the applinks, webcredentials or appclips services. Apple requires the file over HTTPS with no redirects; when it can't read it, Universal Links on this domain open in Safari instead of the app.",
+    howToFix:
+      "Serve the file at /.well-known/apple-app-site-association (no extension) over HTTPS, without redirects, as a JSON object with an applinks entry listing your app ID. Apple fetches it through its own CDN, so allow a while for fixes to take effect.",
+  },
+  "apple-app-site-association-missing": {
+    severity: "info",
+    title: "No apple-app-site-association file",
+    explanation:
+      "Pages on this site promote an iOS app, but /.well-known/apple-app-site-association doesn't exist. Without it, links to this site always open in Safari, even for people who have the app. That's fine if you don't want links to open the app.",
+    howToFix:
+      "If links to your site should open your iOS app, add the Associated Domains entitlement to the app and serve the association file at /.well-known/apple-app-site-association over HTTPS, without redirects.",
+  },
+  "assetlinks-invalid": {
+    severity: "warning",
+    title: "Broken assetlinks.json file",
+    explanation:
+      "The site serves /.well-known/assetlinks.json, but it redirects, isn't served as application/json, isn't valid JSON, or has no statement granting handle_all_urls to an Android app with a package name and certificate fingerprint. Android can't verify the site's App Links, so links open in the browser instead of the app.",
+    howToFix:
+      'Serve /.well-known/assetlinks.json over HTTPS, without redirects, with content type application/json. Include a statement with relation "delegate_permission/common.handle_all_urls" and a target with namespace "android_app", your package_name and your signing certificate\'s sha256_cert_fingerprints.',
+  },
+  "assetlinks-missing": {
+    severity: "info",
+    title: "No assetlinks.json file",
+    explanation:
+      "Pages on this site link to an Android app on Google Play, but /.well-known/assetlinks.json doesn't exist. Without it, Android can't verify App Links, so links to this site open in the browser even for people who have the app. That's fine if you don't want links to open the app.",
+    howToFix:
+      "If links to your site should open your Android app, declare App Links in the app's manifest and serve /.well-known/assetlinks.json over HTTPS with your package name and signing certificate fingerprint.",
+  },
   "deep-page": {
     severity: "info",
     title: "Page is deep in the site structure",

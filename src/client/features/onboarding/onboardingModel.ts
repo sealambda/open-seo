@@ -28,6 +28,7 @@ export const INTEREST_OPTIONS = [
   "Backlink analysis",
   "Site audits",
   "Rank tracking",
+  "App store optimization (ASO)",
   "Other",
 ] as const;
 

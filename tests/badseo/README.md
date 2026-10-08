@@ -18,19 +18,23 @@ tool.
 
 ## What's covered
 
-Every issue type in the OpenSEO audit engine is exercised by at least one page
-(the harness enforces this). Pages are grouped by category:
+Nearly every issue type in the OpenSEO audit engine is exercised by at least
+one page, and the harness reports any that aren't. The exceptions can't share a
+site with their siblings: `crawl-rate-limited`, and the two "missing app link
+file" issues (this site serves both files, broken on purpose), which are covered
+by unit tests. Pages are grouped by category:
 
-| Category                     | Pages                                                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Head tags & headings**     | missing title, title too long/short, missing meta, meta too long, missing H1, multiple H1, heading-level skip |
-| **Content quality**          | thin content, images missing alt, duplicate content, duplicate title, duplicate meta description              |
-| **Indexability & canonical** | noindex (meta + `X-Robots-Tag` header), canonicalized to another URL, conflicting canonicals                  |
-| **HTTP status & links**      | 404, 500, 403 (blocked), broken internal link                                                                 |
-| **Redirects**                | redirect chain, redirect loop, trailing-slash canonical (redirect-cycle trap)                                 |
-| **Performance**              | slow server response (TTFB)                                                                                   |
-| **Site structure**           | orphan page, deep click-path                                                                                  |
-| **Kitchen sink**             | one page that breaks six ways at once                                                                         |
+| Category                     | Pages                                                                                                                                                            |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Head tags & headings**     | missing title, title too long/short, missing meta, meta too long, missing H1, multiple H1, heading-level skip                                                    |
+| **Content quality**          | thin content, images missing alt, duplicate content, duplicate title, duplicate meta description                                                                 |
+| **Indexability & canonical** | noindex (meta + `X-Robots-Tag` header), canonicalized to another URL, conflicting canonicals                                                                     |
+| **HTTP status & links**      | 404, 500, 403 (blocked), broken internal link                                                                                                                    |
+| **Redirects**                | redirect chain, redirect loop, trailing-slash canonical (redirect-cycle trap)                                                                                    |
+| **Performance**              | slow server response (TTFB)                                                                                                                                      |
+| **Site structure**           | orphan page, deep click-path                                                                                                                                     |
+| **App promotion**            | Smart App Banner pointing at the home page, app banner without app markup, dead Firebase Dynamic Link, broken `apple-app-site-association` and `assetlinks.json` |
+| **Kitchen sink**             | one page that breaks six ways at once                                                                                                                            |
 
 Browse them all on the homepage at `/#issues`.
 

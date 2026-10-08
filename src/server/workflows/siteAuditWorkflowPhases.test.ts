@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NO_APP_SIGNALS } from "@/server/lib/audit/app-signals";
 import type { LighthouseResult } from "@/server/lib/audit/types";
 
 const {
@@ -214,6 +215,7 @@ describe("app-shell crawl coverage", () => {
       vi.mocked(runCrawlPhase).mockResolvedValue({
         pagesCrawled: 2,
         completed: true,
+        appSignals: NO_APP_SIGNALS,
       });
       vi.mocked(runMultipageChecks).mockResolvedValue({
         issues: [],
@@ -237,6 +239,11 @@ describe("app-shell crawl coverage", () => {
         ) => {
           if (name === "discover-urls-v2")
             return { robotsText: "", seededCount: 2 };
+          if (name === "app-link-files")
+            return {
+              appleAppSiteAssociation: { status: "ok" },
+              assetlinks: { status: "ok" },
+            };
           return callback();
         },
       );

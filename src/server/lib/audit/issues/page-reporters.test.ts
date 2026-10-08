@@ -48,6 +48,8 @@ function makePage(overrides: Partial<CrawledPageResult>): CrawledPageResult {
     images: [],
     links: [HEALTHY_LINK],
     hasStructuredData: false,
+    hasAppSchema: false,
+    smartAppBanner: null,
     hreflangTags: [],
     isIndexable: true,
     responseTimeMs: 200,
@@ -91,6 +93,44 @@ describe("runPageReporters", () => {
 
   it("reports nothing for a healthy page", () => {
     expect(issueTypes(makePage({}))).toEqual([]);
+  });
+
+  it.each([
+    // makePage is at /a, so a root argument drops the reader's place.
+    ["app-id=123, app-argument=https://example.com/", "argument-is-root"],
+    ["app-argument=https://example.com/a", "missing-app-id"],
+  ])("flags a malformed Smart App Banner: %s", (content, problem) => {
+    const issues = runPageReporters(
+      makePage({ smartAppBanner: content, hasAppSchema: true }),
+    );
+    expect(issues.map((issue) => issue.issueType)).toEqual([
+      "malformed-smart-app-banner",
+    ]);
+    expect(issues[0]?.details?.problem).toBe(problem);
+  });
+
+  it("accepts a banner with an app id, and asks for app markup without schema", () => {
+    const banner = "app-id=123456, app-argument=myapp://item/1";
+    expect(
+      issueTypes(makePage({ smartAppBanner: banner, hasAppSchema: true })),
+    ).toEqual([]);
+    expect(issueTypes(makePage({ smartAppBanner: banner }))).toEqual([
+      "app-banner-without-app-schema",
+    ]);
+  });
+
+  it("flags links to shut-down Firebase Dynamic Links", () => {
+    const links = [
+      HEALTHY_LINK,
+      {
+        ...HEALTHY_LINK,
+        targetUrl: "https://myapp.page.link/abc",
+        isInternal: false,
+      },
+    ];
+    expect(issueTypes(makePage({ links }))).toEqual([
+      "dead-firebase-dynamic-link",
+    ]);
   });
 
   // A fetch that never produced a page yields exactly its fetch issue, and

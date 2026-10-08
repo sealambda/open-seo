@@ -56,3 +56,9 @@ export const MULTIPAGE_CHECKS_STEP: WorkflowStepConfig = {
   retries: { limit: 2, delay: "5 seconds", backoff: "exponential" },
   timeout: "5 minutes",
 };
+
+/** Two small app link file fetches (10s timeout each, run in parallel). */
+export const APP_LINK_FILES_STEP: WorkflowStepConfig = {
+  retries: { limit: 1, delay: "5 seconds", backoff: "constant" },
+  timeout: "1 minute",
+};

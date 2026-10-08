@@ -14,6 +14,7 @@ describe("buildSamSkillSource", () => {
     expect(names).toEqual([
       "ai-prompt-research",
       "ai-visibility-audit",
+      "app-metadata-optimization",
       "competitive-landscape",
       "competitor-analysis",
       "keyword-clustering",

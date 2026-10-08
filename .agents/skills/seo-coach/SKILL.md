@@ -93,6 +93,7 @@ Want to go deeper?
 - `competitive-landscape`: identifies who wins across a market and what content/backlink patterns are working.
 - `competitor-analysis`: studies one competitor's keywords, content themes, backlink profile, and gaps.
 - `local-seo`: audits a Google Business Profile against local competitors and maps Maps visibility around a location.
+- `app-metadata-optimization`: drafts App Store and Google Play listing metadata that covers an app's target search terms and passes each store's rules.
 - `link-prospecting`: finds likely link opportunities, discovers contact paths, and drafts outreach.
 - `seo-report`: the report-writing skill the workflows above deliver through. It carries the starter template and the save rules; users do not run it on its own.
 

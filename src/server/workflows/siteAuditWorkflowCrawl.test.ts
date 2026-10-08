@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NO_APP_SIGNALS } from "@/server/lib/audit/app-signals";
 import type { CrawledPageResult } from "@/server/lib/audit/types";
 
 const mocks = vi.hoisted(() => ({
@@ -149,7 +150,12 @@ describe("crawl pacing and cooldowns", () => {
     });
     const result = crawl(210);
     await vi.runAllTimersAsync();
-    expect(await result).toEqual({ pagesCrawled: 210, completed: true });
+    expect(await result).toEqual({
+      pagesCrawled: 210,
+      completed: true,
+      appSignals: NO_APP_SIGNALS,
+    });
+    expect(new Set(saved.map((page) => page.url)).size).toBe(210);
     expect(starts).toHaveLength(210);
     expect(starts.slice(1).every((at, i) => at - starts[i] >= 1_000)).toBe(
       true,
@@ -169,7 +175,11 @@ describe("crawl pacing and cooldowns", () => {
     });
     const result = crawl(10);
     await vi.runAllTimersAsync();
-    expect(await result).toEqual({ pagesCrawled: 10, completed: true });
+    expect(await result).toEqual({
+      pagesCrawled: 10,
+      completed: true,
+      appSignals: NO_APP_SIGNALS,
+    });
     expect(peak).toBe(2);
   });
 
@@ -184,7 +194,11 @@ describe("crawl pacing and cooldowns", () => {
     });
     const result = crawl(100);
     await vi.runAllTimersAsync();
-    expect(await result).toEqual({ pagesCrawled: 100, completed: true });
+    expect(await result).toEqual({
+      pagesCrawled: 100,
+      completed: true,
+      appSignals: NO_APP_SIGNALS,
+    });
     expect(starts[1]).toBe(30_000);
     expect(starts.slice(2).every((at, i) => at - starts[i + 1] >= 2_000)).toBe(
       true,
@@ -202,7 +216,11 @@ describe("crawl pacing and cooldowns", () => {
     expect(mocks.releaseUrls.mock.calls[0][0]).toHaveLength(10);
     expect(mocks.sleepUntil).toHaveBeenCalledWith("crawl-cooldown-1", 600_001);
     await vi.runAllTimersAsync();
-    expect(await result).toEqual({ pagesCrawled: 10, completed: true });
+    expect(await result).toEqual({
+      pagesCrawled: 10,
+      completed: true,
+      appSignals: NO_APP_SIGNALS,
+    });
     expect(fetchMock).toHaveBeenCalledTimes(11);
     expect(new Set(saved.map((page) => page.url)).size).toBe(10);
     expect(saved.every((page) => page.fetchClass === "ok")).toBe(true);
@@ -226,7 +244,11 @@ describe("crawl pacing and cooldowns", () => {
     vi.setSystemTime(700_000);
     const resumed = crawl(10);
     await vi.runAllTimersAsync();
-    expect(await resumed).toEqual({ pagesCrawled: 10, completed: true });
+    expect(await resumed).toEqual({
+      pagesCrawled: 10,
+      completed: true,
+      appSignals: NO_APP_SIGNALS,
+    });
     expect(mocks.sleepUntil.mock.calls).toEqual([
       ["crawl-cooldown-1", 600_001],
       ["crawl-cooldown-1", 600_001],
@@ -254,7 +276,11 @@ describe("crawl pacing and cooldowns", () => {
     await vi.advanceTimersByTimeAsync(599_999);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await vi.runAllTimersAsync();
-    expect(await result).toEqual({ pagesCrawled: 10, completed: true });
+    expect(await result).toEqual({
+      pagesCrawled: 10,
+      completed: true,
+      appSignals: NO_APP_SIGNALS,
+    });
     expect(fetchMock).toHaveBeenCalledTimes(11);
     expect(new Set(saved.map((page) => page.url)).size).toBe(10);
   });
@@ -292,6 +318,7 @@ describe("crawl pacing and cooldowns", () => {
       pagesCrawled: 1,
       completed: false,
       rateLimited: true,
+      appSignals: NO_APP_SIGNALS,
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(mocks.sleepUntil).not.toHaveBeenCalled();

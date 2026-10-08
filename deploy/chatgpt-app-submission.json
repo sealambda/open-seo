@@ -392,6 +392,66 @@
         "destructive_justification": "May use metered research credits but does not delete, overwrite, revoke access, send, or publish anything."
       }
     },
+    "validate_app_metadata": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Only checks the listing text passed in the call against store rules; uses no credits and makes no network requests.",
+        "open_world_justification": "Runs entirely inside OpenSEO on the supplied text and cannot change publicly visible internet state.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, send messages, or perform irreversible actions."
+      }
+    },
+    "get_app_store_results": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Starts or resumes private collection of public App Store or Google Play search results and can record metered usage for a new task.",
+        "open_world_justification": "Uses a private SEO research provider and cannot publish or modify publicly visible internet state.",
+        "destructive_justification": "May use metered research credits but does not delete, overwrite, revoke access, send, or publish anything."
+      }
+    },
+    "get_app_listing": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Starts or resumes private collection of one public App Store or Google Play listing and can record metered usage for a new task.",
+        "open_world_justification": "Uses a private SEO research provider and cannot publish or modify publicly visible internet state.",
+        "destructive_justification": "May use metered research credits but does not delete, overwrite, revoke access, send, or publish anything."
+      }
+    },
+    "get_app_ranking_keywords": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves research data on the search terms a public app ranks for and records metered usage.",
+        "open_world_justification": "Uses a private SEO research provider and cannot publish or modify publicly visible internet state.",
+        "destructive_justification": "May use metered research credits but does not delete, overwrite, revoke access, send, or publish anything."
+      }
+    },
+    "find_app_competitors": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves research data on apps that rank for the same search terms as a public app and records metered usage.",
+        "open_world_justification": "Uses a private SEO research provider and cannot publish or modify publicly visible internet state.",
+        "destructive_justification": "May use metered research credits but does not delete, overwrite, revoke access, send, or publish anything."
+      }
+    },
     "get_search_console_performance": {
       "annotations": {
         "readOnlyHint": true,

@@ -3,23 +3,21 @@ import { dataforseoGet, dataforseoPost } from "@/server/lib/dataforseo/core";
 import {
   assertOk,
   buildTaskBilling,
-  isNoResultsTask,
   isRecord,
-  isTaskInProgress,
   type DataforseoApiResponse,
   type DataforseoItemsTask,
-  type DataforseoResponseLike,
   type DataforseoTaskLike,
 } from "@/server/lib/dataforseo/envelope";
-import { AppError } from "@/server/lib/errors";
+import {
+  collectQueuedTask,
+  NO_RETRY,
+  postedTaskId,
+  type QueuedTaskOutcome,
+} from "@/server/lib/dataforseo/tasks";
 
 // Consumers pick fields generically (pickRowFields), so listing rows stay an
 // untyped record.
 type BusinessListingItem = Record<string, unknown>;
-
-// task_post creates a billed task. A 5xx does not prove the provider skipped
-// the charge, so those posts must never be replayed.
-const NO_RETRY = { maxServerErrorRetries: 0 } as const;
 
 /**
  * Location + language for the Google business_data endpoints. They accept
@@ -151,31 +149,13 @@ export async function fetchMyBusinessInfo(
 }
 
 // ---------------------------------------------------------------------------
-// Task-queue business data (reviews, extended reviews, profile updates).
-// DataForSEO bills these at task_post; task_get collection is free. The post
-// fetchers therefore run through the metered client while
-// fetchBusinessDataTaskResult deliberately does not — see index.ts.
+// Task-queue business data (reviews, extended reviews, profile updates). Billed
+// at task_post and collected for free — see tasks.ts.
 // ---------------------------------------------------------------------------
 
 /** High execution priority: reviews normally settle within ~20s instead of
  *  minutes, which is what makes a single MCP call able to return them. */
 const TASK_PRIORITY_HIGH = 2;
-
-/**
- * Validates a task_post response and returns the created task's id. `assertOk`
- * applies the standard charged-failure ladder (a rejected post entry still
- * carries the cost DataForSEO charged, and "Invalid Field" rejections stay
- * non-reportable); 20100 "Task Created" is the success status for posts.
- */
-function postedTaskId<T extends DataforseoTaskLike & { id?: string }>(
-  response: DataforseoResponseLike<T> | null,
-): DataforseoApiResponse<string> {
-  const task = assertOk(response, { okTaskStatusCode: 20100 });
-  if (!task.id) {
-    throw new AppError("INTERNAL_ERROR", "DataForSEO did not return a task id");
-  }
-  return { data: task.id, billing: buildTaskBilling(task) };
-}
 
 export type BusinessTaskEndpoint =
   | "reviews"
@@ -257,48 +237,14 @@ export async function postMyBusinessUpdatesTask(
   );
 }
 
-export type BusinessTaskOutcome = {
-  status: "pending" | "completed";
-  /** The first `result` entry once the task completed; null when empty. */
-  result: Record<string, unknown> | null;
-};
-
-/**
- * Collects one queued business_data task. Deliberately not metered and not
- * wrapped in the billing envelope: collection is free (the task was charged at
- * task_post), so routing it through the metering seam would charge twice.
- */
-export async function fetchBusinessDataTaskResult(input: {
+/** Collects one queued business_data task; free, so deliberately unmetered. */
+export function fetchBusinessDataTaskResult(input: {
   endpoint: BusinessTaskEndpoint;
   taskId: string;
-}): Promise<BusinessTaskOutcome> {
-  const response = await dataforseoGet(
+}): Promise<QueuedTaskOutcome> {
+  return collectQueuedTask(
     `/v3/business_data/google/${input.endpoint}/task_get/${encodeURIComponent(input.taskId)}`,
   );
-
-  const task = response?.tasks?.[0];
-  if (!response || response.status_code !== 20000 || !task) {
-    throw new AppError(
-      "INTERNAL_ERROR",
-      response?.status_message || "DataForSEO task_get failed",
-    );
-  }
-
-  if (isTaskInProgress(task)) return { status: "pending", result: null };
-
-  if (task.status_code !== 20000) {
-    // "No Search Results" is a valid empty outcome (no reviews/updates yet).
-    if (!isNoResultsTask(task)) {
-      throw new AppError(
-        "INTERNAL_ERROR",
-        task.status_message || `DataForSEO task failed (${task.status_code})`,
-      );
-    }
-    return { status: "completed", result: null };
-  }
-
-  const first = task.result?.[0];
-  return { status: "completed", result: isRecord(first) ? first : null };
 }
 
 const businessCategorySchema = z

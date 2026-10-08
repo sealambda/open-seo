@@ -5,6 +5,7 @@
  */
 import * as cheerio from "cheerio";
 import { describe, expect, it } from "vitest";
+import { jsonLdDeclaresApp } from "@/server/lib/audit/app-signals";
 import { analyzeHtml } from "@/server/lib/audit/page-analyzer";
 import { normalizeUrl, isSameOrigin } from "@/server/lib/audit/url-utils";
 import type { PageAnalysis, PageLink } from "@/server/lib/audit/types";
@@ -74,9 +75,13 @@ function analyzeHtmlWithCheerio(html: string, pageUrl: string): PageAnalysis {
   });
 
   let hasStructuredData = false;
-  $('script[type="application/ld+json"]').each(() => {
+  let hasAppSchema = false;
+  $('script[type="application/ld+json"]').each((_, el) => {
     hasStructuredData = true;
+    hasAppSchema ||= jsonLdDeclaresApp($(el).text());
   });
+  const banner = $('meta[name="apple-itunes-app"]').first();
+  const smartAppBanner = banner.length ? (banner.attr("content") ?? "") : null;
 
   const hreflangTags: string[] = [];
   $('link[rel="alternate"][hreflang]').each((_, el) => {
@@ -103,6 +108,8 @@ function analyzeHtmlWithCheerio(html: string, pageUrl: string): PageAnalysis {
     images,
     links: Array.from(linksByTarget.values()),
     hasStructuredData,
+    hasAppSchema,
+    smartAppBanner,
     hreflangTags,
   };
 }
@@ -150,6 +157,19 @@ describe("analyzeHtml parity with the DOM reference", () => {
         <a href="javascript:void(0)">JS</a>
         <a href="/empty-anchor"><img src="/img-link.png" alt=""></a>
       </body></html>`);
+  });
+
+  it("matches on a Smart App Banner and app schema nested in @graph", () => {
+    const html = `<html><head><title>An app</title>
+      <meta name="apple-itunes-app" content="app-id=123, app-argument=https://example.com/x">
+      <script type="application/ld+json">{"@type":"Organization"}</script>
+      <script type="application/ld+json">{"@graph":[{"@type":"WebPage","mainEntity":{"@type":["MobileApplication"]}}]}</script>
+    </head><body><p>Get the app.</p></body></html>`;
+    expectParity(html);
+    expect(analyzeHtml(html, PAGE_URL, 200, 0)).toMatchObject({
+      smartAppBanner: "app-id=123, app-argument=https://example.com/x",
+      hasAppSchema: true,
+    });
   });
 
   it("matches on documents with no head, body, or title", () => {

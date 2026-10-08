@@ -22,6 +22,17 @@ export { SERP_ANALYSIS_DEPTH } from "@/server/lib/dataforseo/serp";
 
 export { normalizeBacklinksTarget } from "@/server/lib/dataforseoBacklinksTarget";
 
+export {
+  LABS_APP_LANGUAGE_CODE,
+  LABS_APP_LOCATION_CODE,
+} from "@/server/lib/dataforseo/app-labs";
+export {
+  parseAppListing,
+  parseAppSearchResult,
+  type AppDataStore,
+} from "@/server/lib/dataforseo/apps";
+export type { QueuedTaskOutcome } from "@/server/lib/dataforseo/tasks";
+
 // Section fetchers called outside the metered client. Task collection is free
 // at DataForSEO (the task was charged at task_post), so routing these through
 // the metering seam would charge the customer twice; business categories are
@@ -35,11 +46,11 @@ export {
   type AiTrackingAnswer,
   type PostedAiTrackingTask,
 } from "@/server/lib/dataforseo/ai-tracking";
+export { fetchAppDataTaskResult } from "@/server/lib/dataforseo/apps";
 export {
   fetchBusinessDataTaskResult,
   fetchBusinessListingsCategories,
   type BusinessTaskEndpoint,
-  type BusinessTaskOutcome,
 } from "@/server/lib/dataforseo/business";
 
 export type {
