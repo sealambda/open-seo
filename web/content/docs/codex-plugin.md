@@ -3,7 +3,7 @@ title: "Use OpenSEO with Codex"
 description: "Add OpenSEO MCP and Agent Skills to Codex in the ChatGPT desktop app or the Codex CLI."
 ---
 
-The OpenSEO plugin bundles OpenSEO MCP and all twelve SEO Agent Skills into one install. This is the preferred way to set up OpenSEO in Codex, in the ChatGPT desktop app or the CLI.
+The OpenSEO plugin bundles OpenSEO MCP and all thirteen SEO Agent Skills into one install. This is the preferred way to set up OpenSEO in Codex, in the ChatGPT desktop app or the CLI.
 
 ## Desktop app
 
@@ -39,7 +39,7 @@ codex mcp login openseo
 
 `codex mcp login` opens a browser to approve the OpenSEO connection. If it reports that `openseo` isn't found, restart Codex first — bundled MCP servers only register after a restart, not immediately after install — then run `codex mcp login openseo` again.
 
-Codex connects OpenSEO MCP at `https://app.openseo.so/mcp` and enables twelve skills:
+Codex connects OpenSEO MCP at `https://app.openseo.so/mcp` and enables thirteen skills:
 
 - SEO Project Setup
 - SEO Coach
@@ -51,6 +51,7 @@ Codex connects OpenSEO MCP at `https://app.openseo.so/mcp` and enables twelve sk
 - Competitive Landscape
 - Competitor Analysis
 - Local SEO
+- App Metadata Optimization
 - Link Prospecting
 - SEO Report
 

@@ -39,6 +39,10 @@ The OpenSEO plugins for Claude, ChatGPT and Codex include the skills. Connectors
 - [AI Visibility Audit](/docs/skills/ai-visibility-audit): find the few changes most likely to get your brand mentioned or cited in AI answers.
 - [AI Prompt Research](/docs/skills/ai-prompt-research): find the questions people ask about your market, how ChatGPT answers them, and which sites get cited.
 
+## App store workflows
+
+- [App Metadata Optimization](/docs/skills/app-metadata-optimization): draft App Store and Google Play listing metadata that covers your target search terms and passes each store's rules.
+
 ## Promotion workflows
 
 - [Link Prospecting](/docs/skills/link-prospecting): find qualified outreach prospects and the angle that makes each one relevant.

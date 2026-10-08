@@ -11,6 +11,7 @@
  * tokenizer keeps only the accumulated text and extracted fields in memory.
  */
 import { Parser } from "htmlparser2";
+import { jsonLdDeclaresApp } from "./app-signals";
 import { normalizeUrl, isSameOrigin } from "./url-utils";
 import type { PageAnalysis, PageLink } from "./types";
 
@@ -106,6 +107,12 @@ function countWords(text: string): number {
   }
   return count;
 }
+/**
+ * JSON-LD blocks are read only to learn whether they declare an app, then
+ * dropped. Anything longer is skipped rather than held in memory.
+ */
+const MAX_JSON_LD_CHARS = 64 * 1024;
+const MAX_BANNER_CHARS = 512;
 
 interface OpenAnchor {
   href: string;
@@ -138,6 +145,10 @@ export function analyzeHtml(
   let hasStructuredData = false;
   let hasAppRoot = false;
   let hasExecutableScript = false;
+  let hasAppSchema = false;
+  let smartAppBanner: string | null = null;
+  // Text of the JSON-LD block being read; null outside one.
+  let jsonLd: { parts: string[]; chars: number } | null = null;
   const hreflangTags: string[] = [];
 
   const h1s: string[] = [];
@@ -181,6 +192,9 @@ export function analyzeHtml(
       ogDescription ??= content ?? null;
     } else if (attribs["property"] === "og:image") {
       ogImage ??= content ?? null;
+    } else if (attribs["name"] === "apple-itunes-app") {
+      // Capped like anchors: the value lands in issue details.
+      smartAppBanner ??= (content ?? "").slice(0, MAX_BANNER_CHARS);
     }
   };
 
@@ -262,6 +276,7 @@ export function analyzeHtml(
             ].includes(attribs["type"]?.toLowerCase() ?? "");
             if (attribs["type"] === "application/ld+json") {
               hasStructuredData = true;
+              jsonLd = { parts: [], chars: 0 };
             }
             break;
           case "a": {
@@ -286,6 +301,10 @@ export function analyzeHtml(
         }
       },
       ontext(text) {
+        if (jsonLd && jsonLd.chars <= MAX_JSON_LD_CHARS) {
+          jsonLd.parts.push(text);
+          jsonLd.chars += text.length;
+        }
         if (suppressDepth > 0) return;
         if (titleDepth > 0) {
           if (title !== null) title += text;
@@ -298,6 +317,12 @@ export function analyzeHtml(
       onclosetag(name) {
         if (NON_CONTENT_TAGS.has(name) && suppressDepth > 0) {
           suppressDepth -= 1;
+        }
+        if (name === "script" && jsonLd) {
+          if (!hasAppSchema && jsonLd.chars <= MAX_JSON_LD_CHARS) {
+            hasAppSchema = jsonLdDeclaresApp(jsonLd.parts.join(""));
+          }
+          jsonLd = null;
         }
         if (name === "noscript" && noscriptDepth > 0) {
           noscriptDepth -= 1;
@@ -354,6 +379,8 @@ export function analyzeHtml(
     images,
     links: Array.from(linksByTarget.values()),
     hasStructuredData,
+    hasAppSchema,
+    smartAppBanner,
     hreflangTags,
   };
 }

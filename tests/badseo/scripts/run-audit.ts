@@ -17,8 +17,15 @@ import { crawlPage } from "../../../src/server/workflows/site-audit-workflow-hel
 import { createCrawlThrottle } from "../../../src/server/lib/audit/crawl-throttle";
 import {
   discoverUrls,
+  fetchAppLinkFiles,
   parseRobotsTxt,
 } from "../../../src/server/lib/audit/discovery";
+import {
+  mergeAppSignals,
+  NO_APP_SIGNALS,
+  pageAppSignals,
+} from "../../src/server/lib/audit/app-signals";
+import { appLinkFileIssues } from "../../src/server/lib/audit/issues/app-link-files";
 import {
   normalizeUrl,
   isSameOrigin,
@@ -270,6 +277,15 @@ async function main() {
   detected.push(...findRedirectChainsAndLoops(slim));
   detected.push(...findBrokenInternalLinks(pages, links));
   if (completed) detected.push(...findOrphanPages(pages, links, startUrl));
+  detected.push(
+    ...appLinkFileIssues({
+      origin,
+      signals: pages
+        .map(pageAppSignals)
+        .reduce(mergeAppSignals, NO_APP_SIGNALS),
+      verdicts: await fetchAppLinkFiles(origin),
+    }),
+  );
 
   const byUrl = new Map<string, Set<IssueId>>();
   for (const issue of detected) {
