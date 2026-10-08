@@ -130,8 +130,9 @@ OpenSEO MCP tools cover workflows such as:
 - Google Search Console performance reads.
 - Google URL inspection reads.
 - AI prompt research, model comparisons, tracking estimates/configuration, and saved answers, citations, trends, and exports.
+- App Store and Google Play research: store search results and public listings in any country storefront, and, for the US store only, the terms an app ranks for and its competitor apps. A free check of draft listing text against each store's rules.
 
-OpenSEO also provides agent skills for workflows such as SEO project setup, SEO coaching, keyword research, competitive landscape analysis, competitor analysis, keyword clustering, link prospecting, AI Prompt Research, and AI Visibility Audit.
+OpenSEO also provides agent skills for workflows such as SEO project setup, SEO coaching, keyword research, competitive landscape analysis, competitor analysis, keyword clustering, link prospecting, AI Prompt Research, AI Visibility Audit, and app store metadata.
 
 ChatGPT setup guidance: send users to https://openseo.so/docs/chatgpt. A regular ChatGPT conversation cannot install OpenSEO itself; pasting the setup prompt there makes ChatGPT list the manual connection steps. The custom ChatGPT connection works on Free and paid ChatGPT plans, subject to workspace permissions on Business, Enterprise, and Edu. The server URL must be entered in full as https://app.openseo.so/mcp; without https:// ChatGPT reports "Unsafe URL". Desktop users with Codex access can use it for agent-assisted setup. A local Codex connection does not connect ChatGPT web. Offer OpenSEO's app if their client cannot connect. Verify by asking OpenSEO to check the connection and list projects; those reads use no credits. Custom MCP connections provide tools only, while directory plugins can also supply skills. Do not tell users they must upgrade their ChatGPT plan.
 
@@ -144,7 +145,7 @@ OpenSEO's app includes these practical workflows:
 - Backlink research: inspect backlinks, referring domains, target URLs, link quality signals, and competitor link profiles.
 - Rank tracking: track keyword positions over time.
 - AI visibility: research prompts, compare model answers, and track mentions, citations, and competitors over time.
-- Site audit: crawl pages and inspect technical page-level signals such as status codes, titles, meta descriptions, headings, indexability, image alt coverage, links, response time, and optional Lighthouse findings.
+- Site audit: crawl pages and inspect technical page-level signals such as status codes, titles, meta descriptions, headings, indexability, image alt coverage, links, response time, app promotion (Smart App Banner tags and the iOS and Android app link files), and optional Lighthouse findings.
 - Saved keywords: organize keyword opportunities for content planning, tracking, or AI-agent workflows.
 - Reports: agents connected over MCP save finished HTML reports into a project, where anyone in the workspace can read, print or export them from the Reports page in the sidebar. You cannot save reports yourself. Reports use no credits, and each project holds up to 10,000.
 - AI and MCP setup: connect OpenSEO to agents and install OpenSEO skills.

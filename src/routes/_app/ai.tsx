@@ -59,6 +59,10 @@ const SKILLS = [
   ],
   ["link-prospecting", "Finds link prospects and drafts outreach."],
   ["local-seo", "Audits a Google Business Profile and Maps visibility."],
+  [
+    "app-metadata-optimization",
+    "Drafts App Store and Google Play listing metadata.",
+  ],
   ["seo-report", "Saves any of the above as a report on your Reports page."],
 ];
 

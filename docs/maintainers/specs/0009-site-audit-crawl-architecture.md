@@ -62,7 +62,7 @@ oversized bodies shrink it; clean fast batches grow it). A soft deadline ends
 the chunk early and releases unfetched leases. Persistence is pipelined with
 fetching but serialized with itself: page rows and per-page issues go to the
 app DB, link edges and frontier updates go to the DO, and progress counters
-update per sub-batch. Step returns carry only counters, so no step output
+update per sub-batch. Step returns carry only counters and small flags, so no step output
 scales with site size.
 
 Everything is idempotent under step retries: chunk-keyed leases (a retried

@@ -7,6 +7,7 @@ export type CreditFeature =
   | "ai_citations"
   | "ai_prompt_responses"
   | "local_seo"
+  | "aso"
   | "agent";
 
 const CREDIT_FEATURE_LABELS: Record<string, string> = {
@@ -19,11 +20,14 @@ const CREDIT_FEATURE_LABELS: Record<string, string> = {
   ai_prompt_responses: "AI Prompt Responses",
   ai_search: "AI Search",
   local_seo: "Local SEO",
+  aso: "App Store Optimization",
   // The onboarding chat is gone, but historical usage events still carry this
   // key — keep the label so old billing breakdowns don't render "Other".
   onboarding: "Onboarding",
   agent: "SAM Agent",
 };
+
+const LABS_APP_ENDPOINTS = new Set(["keywords_for_app", "app_competitors"]);
 
 /**
  * Maps a DataForSEO API response path (e.g. ["v3", "dataforseo_labs", "google", "related_keywords", "live"])
@@ -58,8 +62,13 @@ export function mapDataforseoPathToCreditFeature(
       return "local_seo";
     case "keywords_data":
       return "keyword_research";
+    case "app_data":
+      return "aso";
     case "dataforseo_labs": {
       const endpoint = normalizedPath[3] ?? "";
+      // Play app endpoints share the "google" segment with web Labs, so match
+      // the endpoint name rather than path[2].
+      if (LABS_APP_ENDPOINTS.has(endpoint)) return "aso";
       if (
         endpoint.startsWith("domain_") ||
         endpoint === "ranked_keywords" ||

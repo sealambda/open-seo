@@ -107,6 +107,15 @@ import {
   deleteSiteAuditTool,
   listSiteAuditsTool,
 } from "@/server/mcp/tools/site-audit-cleanup-tools";
+import {
+  findAppCompetitorsTool,
+  getAppRankingKeywordsTool,
+} from "@/server/mcp/tools/app-keyword-tools";
+import {
+  getAppListingTool,
+  getAppStoreResultsTool,
+} from "@/server/mcp/tools/app-store-tools";
+import { validateAppMetadataTool } from "@/server/mcp/tools/validate-app-metadata";
 import { whoamiTool } from "@/server/mcp/tools/whoami";
 import { explorePromptTool } from "@/server/mcp/tools/explore-prompt";
 
@@ -250,6 +259,11 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(listBusinessCategoriesTool);
   register(getLocalRankGridTool);
   register(getKeywordMetricsTool);
+  register(validateAppMetadataTool);
+  register(getAppStoreResultsTool);
+  register(getAppListingTool);
+  register(getAppRankingKeywordsTool);
+  register(findAppCompetitorsTool);
   register(getSearchConsolePerformanceTool);
   register(inspectUrlsTool);
   register(getGoogleAnalyticsOrganicLandingPagesTool);

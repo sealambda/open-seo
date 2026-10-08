@@ -1,0 +1,42 @@
+---
+title: "App Metadata Optimization Agent Skill"
+description: "Draft App Store and Google Play listing metadata that covers your target search terms and passes each store's rules, with your AI agent."
+---
+
+<RunSkillCallout command="/app-metadata-optimization" />
+
+The App Metadata Optimization Agent Skill drafts the text of an app's store listing: the App Store name, subtitle and keyword field, or the Google Play title, short description and full description.
+
+Your agent reads the app's current listing and its competitors', builds a list of search terms worth covering, checks who ranks for the important ones, and then writes two or three candidates. It checks every draft against the store's limits and rules and against the term list until the draft passes.
+
+You get the candidates ready to paste into App Store Connect or Play Console, how many target terms each one covers, and a recommendation.
+
+## What this skill helps your agent do
+
+- Read an app's public listing, and its competitors', in any country storefront and language.
+- See which apps rank for a search term in a storefront, and where your app ranks.
+- In the US store, pull the terms an app already ranks for, with estimated search volume, and the apps that compete for the same terms.
+- Check drafts against each store's published limits and rules. The App Store keyword field is limited to 100 bytes, so accented and non-Latin characters count for more.
+- Flag common waste, such as keyword-field words already in the name, spaces after commas, and singular and plural pairs.
+- Show which target terms each draft covers and which words are still missing.
+
+## When to use it
+
+Use this skill before an app release, when a listing's search traffic has stalled, or when you localize an app into a new storefront.
+
+It helps when you don't know which terms to target, when you want to know whether a draft fits the store's limits, or when you want to see how competitors word their listings.
+
+## What you get back
+
+Your agent should return a snapshot of the current listing, a table of target terms with where each one came from, two or three candidate listings with their lengths and coverage, and a recommendation.
+
+On the App Store, name, subtitle and keyword field changes ship with the next app version and go through App Review. On Google Play, listing changes don't need an app update.
+
+## How to get the best result
+
+- Give the agent the App Store id (the digits after `id` in the listing URL) or the Google Play package name.
+- Say which storefront the listing is for. Keyword volume and competitor data exist only for the US store; for other storefronts the agent works from listing text and store search results.
+- Coverage checks work for languages that separate words with spaces. For Chinese, Japanese or Korean listings, the agent can't count covered terms automatically.
+- Share the current keyword field or short description if you want them improved. They aren't public, so the agent can't read them.
+- Treat store rules as rules and the other warnings as advice. Neither store documents exactly how it indexes listings.
+- Store searches, listings and keyword data use credits. Checking a draft against the store's rules doesn't.

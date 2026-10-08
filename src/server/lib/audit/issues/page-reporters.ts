@@ -9,6 +9,10 @@
  * live in multipage.ts and run over D1 after the crawl.
  */
 import type { AuditIssueType } from "@/shared/audit-issues";
+import {
+  isFirebaseDynamicLink,
+  parseSmartAppBanner,
+} from "@/server/lib/audit/app-signals";
 import type { CrawledPageResult } from "@/server/lib/audit/types";
 
 export interface DetectedIssue {
@@ -31,6 +35,29 @@ const META_DESCRIPTION_MIN_CHARS = 70;
 const THIN_CONTENT_WORDS = 150;
 const SLOW_RESPONSE_MS = 1500;
 const DEEP_PAGE_DEPTH = 5;
+
+const MAX_LISTED_LINKS = 5;
+
+/** Why a Smart App Banner is malformed, or null when it's fine. */
+function smartAppBannerProblem(
+  page: Pick<CrawledPageResult, "url" | "smartAppBanner">,
+): string | null {
+  if (page.smartAppBanner === null) return null;
+  const { appId, appArgument } = parseSmartAppBanner(page.smartAppBanner);
+  if (!appId || !/^\d+$/.test(appId)) return "missing-app-id";
+  if (!appArgument) return null;
+  try {
+    const argument = new URL(appArgument);
+    const pageUrl = new URL(page.url);
+    // Only same-site web URLs can be compared; custom schemes are the app's
+    // own business.
+    if (argument.origin !== pageUrl.origin) return null;
+    const pointsAtRoot = argument.pathname === "/" && !argument.search;
+    return pointsAtRoot && pageUrl.pathname !== "/" ? "argument-is-root" : null;
+  } catch {
+    return null;
+  }
+}
 
 function hasHeadingLevelSkip(headingOrder: number[]): boolean {
   for (let i = 1; i < headingOrder.length; i++) {
@@ -154,6 +181,27 @@ export function runPageReporters(page: CrawledPageResult): DetectedIssue[] {
     report("images-missing-alt", {
       imagesMissingAlt: page.imagesMissingAlt,
       imagesTotal: page.imagesTotal,
+    });
+  }
+
+  // App promotion
+  const bannerProblem = smartAppBannerProblem(page);
+  if (bannerProblem) {
+    report("malformed-smart-app-banner", {
+      problem: bannerProblem,
+      content: page.smartAppBanner,
+    });
+  }
+  if (page.smartAppBanner !== null && !page.hasAppSchema) {
+    report("app-banner-without-app-schema");
+  }
+  const deadLinks = page.links
+    .map((link) => link.targetUrl)
+    .filter(isFirebaseDynamicLink);
+  if (deadLinks.length > 0) {
+    report("dead-firebase-dynamic-link", {
+      count: deadLinks.length,
+      urls: deadLinks.slice(0, MAX_LISTED_LINKS),
     });
   }
 

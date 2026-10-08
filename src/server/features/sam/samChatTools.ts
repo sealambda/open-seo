@@ -34,6 +34,14 @@ import { runRankTrackerTool } from "@/server/mcp/tools/run-rank-tracker";
 import { searchSerpLocationsTool } from "@/server/mcp/tools/search-serp-locations";
 import { getSerpResultsTool } from "@/server/mcp/tools/get-serp-results";
 import {
+  findAppCompetitorsTool,
+  getAppRankingKeywordsTool,
+} from "@/server/mcp/tools/app-keyword-tools";
+import {
+  getAppListingTool,
+  getAppStoreResultsTool,
+} from "@/server/mcp/tools/app-store-tools";
+import {
   getAuditIssuesTool,
   getAuditPagesTool,
   getAuditStatusTool,
@@ -75,6 +83,7 @@ import {
   getSearchConsolePerformanceTool,
   inspectUrlsTool,
 } from "@/server/mcp/tools/search-console-tools";
+import { validateAppMetadataTool } from "@/server/mcp/tools/validate-app-metadata";
 import { whoamiTool } from "@/server/mcp/tools/whoami";
 import { explorePromptTool } from "@/server/mcp/tools/explore-prompt";
 import { discoverSiteUrls, readPages, readSite } from "@/server/lib/scrape";
@@ -424,6 +433,11 @@ export function buildSamMcpTools(
     list_business_categories: adaptTool(listBusinessCategoriesTool),
     get_local_rank_grid: adaptTool(getLocalRankGridTool),
     get_keyword_metrics: adaptTool(getKeywordMetricsTool),
+    validate_app_metadata: adaptTool(validateAppMetadataTool),
+    get_app_store_results: adaptTool(getAppStoreResultsTool),
+    get_app_listing: adaptTool(getAppListingTool),
+    get_app_ranking_keywords: adaptTool(getAppRankingKeywordsTool),
+    find_app_competitors: adaptTool(findAppCompetitorsTool),
     get_search_console_performance: adaptTool(getSearchConsolePerformanceTool),
     inspect_urls: adaptTool(inspectUrlsTool),
     // Unconditional like the MCP server's registrations — the GA4 launch gate

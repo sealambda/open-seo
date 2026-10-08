@@ -1,5 +1,11 @@
 import { env, type WorkflowStep } from "cloudflare:workers";
 import { NonRetryableError } from "cloudflare:workflows";
+import {
+  mergeAppSignals,
+  NO_APP_SIGNALS,
+  pageAppSignals,
+  type AppSignals,
+} from "@/server/lib/audit/app-signals";
 import type { RobotsResult } from "@/server/lib/audit/discovery";
 import type { CrawledPageResult } from "@/server/lib/audit/types";
 import { isSameOrigin } from "@/server/lib/audit/url-utils";
@@ -108,6 +114,12 @@ export type CrawlPhaseResult = {
   /** True when the frontier was exhausted before hitting maxPages. */
   completed: boolean;
   rateLimited?: boolean;
+  /**
+   * Pages that promote an app, folded from the chunk results. A chunk whose
+   * first attempt died after persisting pages loses those pages' signals, which
+   * at worst hides an info-level "missing app link file" issue.
+   */
+  appSignals: AppSignals;
 };
 
 export async function runCrawlPhase(
@@ -124,6 +136,7 @@ export async function runCrawlPhase(
   // exceededMemory death every ~200 pages.
   let windowHint = CRAWL_WINDOW.initial;
   let throttleState: CrawlThrottleState | undefined;
+  let appSignals = NO_APP_SIGNALS;
 
   while (pending > 0 && attemptedTotal < params.maxPages) {
     chunkNo += 1;
@@ -149,11 +162,17 @@ export async function runCrawlPhase(
       result.renderUsage?.cloudflareAttempts ?? 0;
     params.renderUsage.contextCredits +=
       result.renderUsage?.contextCredits ?? 0;
+    // `?? NO_APP_SIGNALS`: cached chunk results from before the field existed.
+    appSignals = mergeAppSignals(
+      appSignals,
+      result.appSignals ?? NO_APP_SIGNALS,
+    );
     if (result.rateLimited) {
       return {
         pagesCrawled: attemptedTotal,
         completed: false,
         rateLimited: true,
+        appSignals,
       };
     }
     // `?? initial`: an instance in flight across a deploy replays cached
@@ -175,7 +194,11 @@ export async function runCrawlPhase(
     if (zeroProgressChunks >= 2) break;
   }
 
-  return { pagesCrawled: attemptedTotal, completed: pending === 0 };
+  return {
+    pagesCrawled: attemptedTotal,
+    completed: pending === 0,
+    appSignals,
+  };
 }
 
 async function runCrawlChunk(
@@ -194,6 +217,7 @@ async function runCrawlChunk(
   throttleState?: CrawlThrottleState;
   resumeAt?: number;
   renderUsage?: RenderUsage;
+  appSignals?: AppSignals;
 }> {
   const { auditId, workflowInstanceId, origin, maxPages, robots, chunkNo } =
     input;
@@ -265,6 +289,7 @@ async function runCrawlChunk(
   const deferred: string[] = [];
   let persistThreshold = FIRST_PERSIST_BATCH_SIZE;
   let batch: CrawledPageResult[] = [];
+  let appSignals = NO_APP_SIGNALS;
   // Persistence runs concurrently with fetching (pipelined) but sequentially
   // with itself, so DB write pressure stays bounded at one batch at a time.
   let persistChain: Promise<unknown> = Promise.resolve();
@@ -325,6 +350,7 @@ async function runCrawlChunk(
           return;
         }
         attemptedInChunk += 1;
+        appSignals = mergeAppSignals(appSignals, pageAppSignals(page));
         batch.push(page);
         if (batch.length >= persistThreshold) flush();
       })
@@ -391,6 +417,7 @@ async function runCrawlChunk(
     endWindow: windowSize,
     rateLimited: throttle.stopped,
     throttleState,
+    appSignals,
     resumeAt:
       throttleState.pausedUntil > Date.now()
         ? throttleState.pausedUntil

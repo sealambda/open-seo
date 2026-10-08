@@ -1,6 +1,11 @@
 import type { WorkflowStep } from "cloudflare:workers";
 import type { BillingCustomerContext } from "@/server/billing/subscription";
-import { discoverUrls, parseRobotsTxt } from "@/server/lib/audit/discovery";
+import {
+  discoverUrls,
+  fetchAppLinkFiles,
+  parseRobotsTxt,
+} from "@/server/lib/audit/discovery";
+import { appLinkFileIssues } from "@/server/lib/audit/issues/app-link-files";
 import {
   failedLighthouseFetch,
   fetchLighthouseResult,
@@ -28,6 +33,7 @@ import {
 } from "@/server/workflows/siteAuditWorkflowCrawl";
 import { pgStep } from "@/server/workflows/pgStep";
 import {
+  APP_LINK_FILES_STEP,
   DB_STEP,
   DISCOVERY_STEP,
   LIGHTHOUSE_FETCH_STEP,
@@ -342,6 +348,15 @@ async function finalizeAudit(args: {
     config,
     crawl,
   } = args;
+  const origin = getOrigin(startUrl);
+
+  // Its own step so the verdicts are checkpointed; never throws.
+  const appLinkFiles = await pgStep(
+    step,
+    "app-link-files",
+    APP_LINK_FILES_STEP,
+    () => fetchAppLinkFiles(origin),
+  );
 
   await pgStep(step, "multipage-checks", MULTIPAGE_CHECKS_STEP, async () => {
     await AuditRepository.updateAuditProgress(auditId, workflowInstanceId, {
@@ -379,6 +394,13 @@ async function finalizeAudit(args: {
       issueCount: linkIssues.length,
     });
     issues.push(...linkIssues);
+    issues.push(
+      ...appLinkFileIssues({
+        origin,
+        signals: crawl.appSignals,
+        verdicts: appLinkFiles,
+      }),
+    );
     if (crawl.rateLimited) {
       issues.push({
         issueType: "crawl-rate-limited",
