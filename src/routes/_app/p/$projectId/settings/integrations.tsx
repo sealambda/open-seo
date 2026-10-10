@@ -2,6 +2,7 @@ import { queryClient } from "@/client/tanstack-db/queryClient";
 import { googleConnectionOptions } from "@/client/features/integrations/googleProviders";
 import { createFileRoute } from "@tanstack/react-router";
 import { GoogleConnectionCard } from "@/client/features/integrations/GoogleConnectionCard";
+import { BingConnectionCard } from "@/client/features/integrations/BingConnectionCard";
 import { CrawlerAccessSettings } from "@/client/features/settings/CrawlerAccessSettings";
 import { EmbedSettings } from "@/client/features/embeds/EmbedSettings";
 import { IndexNowSettings } from "@/client/features/settings/IndexNowSettings";
@@ -40,6 +41,9 @@ function ProjectIntegrationsRoute() {
       <EmbedSettings projectId={projectId} />
 
       <IndexNowSettings projectId={projectId} />
+      <section id="bing-webmaster" className="scroll-mt-6">
+        <BingConnectionCard projectId={projectId} />
+      </section>
 
       <CrawlerAccessSettings projectId={projectId} />
     </div>

@@ -12,6 +12,7 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as React from "react";
 import { DefaultCatchBoundary } from "@/client/components/DefaultCatchBoundary";
+import { captureBingLinkError } from "@/client/features/integrations/bingLinkError";
 import { captureGoogleLinkError } from "@/client/features/integrations/googleLinkError";
 import { ExportToSheetsModal } from "@/client/components/table/ExportToSheetsModal";
 import { themePreferenceInitScript } from "@/client/lib/theme";
@@ -23,9 +24,11 @@ import appCss from "@/client/styles/app.css?url";
 import { Toaster } from "sonner";
 import { queryClient } from "@/client/tanstack-db";
 
-// Capture Google link error params before the router starts — a route loader
-// redirect would otherwise replace the URL and lose them. See googleLinkError.ts.
+// Capture OAuth link error params before the router starts — a route loader
+// redirect would otherwise replace the URL and lose them. See
+// googleLinkError.ts and bingLinkError.ts.
 captureGoogleLinkError();
+captureBingLinkError();
 
 // Zod speeds up object parsing with `new Function`, after probing once whether
 // the page allows it. A Content-Security-Policy without 'unsafe-eval' refuses

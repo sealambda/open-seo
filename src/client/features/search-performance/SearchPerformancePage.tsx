@@ -19,6 +19,7 @@ import { SearchPerformanceDetailSheet } from "@/client/features/search-performan
 import { DimensionSection } from "@/client/features/search-performance/SearchPerformanceDimensionSection";
 import { SearchPerformanceOverview } from "@/client/features/search-performance/SearchPerformanceOverview";
 import { DATE_RANGE_LABELS } from "@/client/features/search-performance/SearchPerformanceSelects";
+import { SearchPerformanceSourceToggle } from "@/client/features/search-performance/SearchPerformanceSourceToggle";
 import { SearchPerformanceLoadingState } from "@/client/features/search-performance/SearchPerformanceLoadingState";
 import {
   tableQueryOptions,
@@ -69,6 +70,22 @@ function buildFilterInput({
     ...(device ? { device } : {}),
     ...(country ? { country } : {}),
   };
+}
+
+function ChangePropertyButton({ projectId }: { projectId: string }) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      nativeButton={false}
+      render={
+        <Link to="/p/$projectId/settings/integrations" params={{ projectId }} />
+      }
+    >
+      <ArrowLeftRight data-icon="inline-start" />
+      Change property
+    </Button>
+  );
 }
 
 export function SearchPerformancePage({
@@ -253,22 +270,17 @@ export function SearchPerformancePage({
           title="Search Performance"
           description="See your site's clicks, impressions, CTR, and position from Google Search Console."
           actions={
-            report?.connected ? (
-              <Button
-                variant="outline"
-                size="sm"
-                nativeButton={false}
-                render={
-                  <Link
-                    to="/p/$projectId/settings/integrations"
-                    params={{ projectId }}
-                  />
+            <>
+              {report?.connected ? (
+                <ChangePropertyButton projectId={projectId} />
+              ) : null}
+              <SearchPerformanceSourceToggle
+                value={search.source ?? "gsc"}
+                onChange={(source) =>
+                  onSearchChange({ source, page: undefined })
                 }
-              >
-                <ArrowLeftRight data-icon="inline-start" />
-                Change property
-              </Button>
-            ) : null
+              />
+            </>
           }
         />
 

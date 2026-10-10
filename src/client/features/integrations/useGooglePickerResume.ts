@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  startGoogleLink,
-  useGoogleLinkPending,
-} from "@/client/features/integrations/startGoogleLink";
+import { startGoogleLink } from "@/client/features/integrations/startGoogleLink";
+import { useLinkRedirectPending } from "@/client/features/integrations/linkRedirect";
 import type { GoogleLinkProvider } from "@/shared/google-link";
 
 const pickerKey = (provider: GoogleLinkProvider, projectId: string) =>
@@ -28,7 +26,7 @@ export function useGooglePickerResume(
   // null lets the card derive unfinished setup from the saved authorization.
   // false means the user explicitly closed the picker during this visit.
   const [picking, setPicking] = useState<boolean | null>(null);
-  const linking = useGoogleLinkPending();
+  const linking = useLinkRedirectPending();
   const key = pickerKey(provider, projectId);
   useEffect(() => {
     setPicking(null);

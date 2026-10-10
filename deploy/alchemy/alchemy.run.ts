@@ -380,6 +380,8 @@ const dataEnv = {
   // Sign in with ChatGPT (hosted only). Unset = no button.
   OPENAI_SIWC_CLIENT_ID: optionalVar("OPENAI_SIWC_CLIENT_ID"),
   OPENAI_SIWC_CLIENT_SECRET: optionalSecret("OPENAI_SIWC_CLIENT_SECRET"),
+  BING_CLIENT_ID: optionalVar("BING_CLIENT_ID"),
+  BING_CLIENT_SECRET: optionalSecret("BING_CLIENT_SECRET"),
   OPENROUTER_API_KEY: optionalSecret("OPENROUTER_API_KEY"),
   OPENROUTER_BASE_URL: optionalVar("OPENROUTER_BASE_URL"),
   OPENROUTER_MODEL: optionalVar("OPENROUTER_MODEL"),

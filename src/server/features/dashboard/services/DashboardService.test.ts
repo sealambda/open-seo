@@ -21,6 +21,9 @@ vi.mock("@/server/features/gsc/repositories/GscConnectionRepository", () => ({
 vi.mock("@/server/features/reports/repositories/ReportRepository", () => ({
   ReportRepository: {},
 }));
+vi.mock("@/server/features/bing/repositories/BingConnectionRepository", () => ({
+  BingConnectionRepository: {},
+}));
 vi.mock("@/server/features/audit/repositories/AuditRepository", () => ({
   AuditRepository: {
     getAuditsByProject: repository.audits,

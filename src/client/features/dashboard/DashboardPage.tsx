@@ -25,6 +25,7 @@ import {
   AuditHealthCard,
   GscCard,
 } from "@/client/features/dashboard/DashboardCards";
+import { BingCard } from "@/client/features/dashboard/BingCard";
 import { Ga4Card } from "@/client/features/dashboard/Ga4Card";
 import { WorkspaceMergeBanner } from "@/client/features/dashboard/WorkspaceMergeBanner";
 import { QueryError } from "@/client/components/QueryState";
@@ -85,6 +86,7 @@ export function DashboardPage({
 
   const showBacklinks = activation.domain !== null;
   const gscConnected = activation.gsc.connected;
+  const bingConnected = activation.bing.connected;
   const ga4Connected = activation.ga4.connected;
   const agentConnected = isAgentConnected(activation);
   // An agent is connected, but no one in the organization has used OpenSEO
@@ -196,6 +198,7 @@ export function DashboardPage({
               connected={gscConnected}
               siteUrl={activation.gsc.siteUrl}
             />
+            <BingCard projectId={projectId} connected={bingConnected} />
             {ga4Connected || !activation.ga4.cardDismissedAt ? (
               <Ga4Card projectId={projectId} connected={ga4Connected} />
             ) : null}
