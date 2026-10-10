@@ -14,10 +14,8 @@ import {
   googleConnectionOptions,
   googleProviders,
 } from "@/client/features/integrations/googleProviders";
-import {
-  startGoogleLink,
-  useGoogleLinkPending,
-} from "@/client/features/integrations/startGoogleLink";
+import { startGoogleLink } from "@/client/features/integrations/startGoogleLink";
+import { useLinkRedirectPending } from "@/client/features/integrations/linkRedirect";
 import { hasNoGscWebsites } from "@/client/features/integrations/GscPropertySetupHelp";
 import { getErrorCode } from "@/client/lib/error-messages";
 import { captureClientEvent } from "@/client/lib/posthog";
@@ -87,7 +85,7 @@ function GscConnect({
   onSkip,
 }: { projectId: string } & NavigationProps) {
   const queryClient = useQueryClient();
-  const linking = useGoogleLinkPending();
+  const linking = useLinkRedirectPending();
   const [selection, setSelection] =
     React.useState<GooglePickerSelection | null>(null);
   const continueRef = React.useRef<HTMLButtonElement>(null);

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ApiKeySettings } from "@/client/features/settings/ApiKeySettings";
+import { BingAccountsSettings } from "@/client/features/settings/BingAccountsSettings";
 import { SectionHeader } from "@/client/components/PageHeader";
 import { ThemePreferenceRadio } from "@/client/components/ThemePreferenceMenuItems";
 import { everyAppAccountQueryOptions } from "@/client/features/every-app/everyAppAccountQueries";
@@ -34,6 +35,8 @@ function PersonalSettings() {
       </section>
 
       {isEveryAppClientAuthMode() ? <EveryAppSettings /> : null}
+
+      <BingAccountsSettings />
 
       {isHosted ? <McpConnectionsSettings /> : null}
 

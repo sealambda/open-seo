@@ -11,10 +11,10 @@ import {
   MapPin,
   MessageSquare,
   Search,
+  SearchCheck,
   TrendingUp,
 } from "lucide-react";
 import { linkOptions } from "@tanstack/react-router";
-import { GoogleGlyphMuted } from "@/client/features/gsc/GoogleGlyph";
 
 const projectNavItems = [
   {
@@ -47,8 +47,8 @@ const projectNavItems = [
   },
   {
     to: "/p/$projectId/search-performance" as const,
-    label: "GSC Insights",
-    icon: GoogleGlyphMuted,
+    label: "Search Performance",
+    icon: SearchCheck,
   },
   {
     to: "/p/$projectId/domain" as const,
