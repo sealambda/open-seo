@@ -326,10 +326,20 @@ What this means for the plan:
 - **Upstream is removing per-page JSON columns.** #878 dropped
   `heading_order_json`, `images_json` and `hreflang_tags_json` from
   `audit_pages`. New per-page data should be normalized rows, not JSON columns.
-- **BadSEO** (`tests/badseo`) is a public site, badseo.dev. Its harness checks
-  that every issue type is triggered by some fixture and that each fixture
-  raises exactly its expected issues. It has one origin and one robots.txt, so a
-  site-level fixture changes the live site's robots.txt.
+- **BadSEO** (`tests/badseo`) is a public site, badseo.dev.
+  - Its harness (`scripts/run-audit.ts`) calls the audit functions directly:
+    `discoverUrls`, `crawlPage`, `runPageReporters` and the multipage checks.
+    It does not run the Workflow, so each new check needs explicit wiring
+    there.
+  - It fails when a fixture URL raises an issue the fixture doesn't expect, and
+    it requires the homepage `/` to be clean.
+  - Issue-type coverage is printed but does not fail the run, despite the
+    README's "the harness enforces this".
+  - No site-level issue fires on badseo today, and `crawl-rate-limited` uses the
+    start URL as `pageUrl`. A site-level issue keyed on `/` would therefore fail
+    the homepage check.
+  - It has one origin and one robots.txt, so a site-level fixture changes the
+    live site's robots.txt.
 - **Prior art in #204:** `jsonld.ts`, a streaming-safe accumulator with caps of
   25 blocks, 64,000 characters per block, depth 12 and 200 tracked `@id`s.
   Worth copying.
@@ -426,28 +436,34 @@ What this means for the plan:
     of the file, so the read truncates rather than skips) and 64 KiB for JSON
     files. The Markdown probe reads no body.
 - **One issue row per bot** for crawler blocks, using `dedupeKey` = token. That
-  keeps details flat (`bot`, `operator`, `purpose`, `rule`, `blockedPages`,
+  keeps details flat (`bot`, `operator`, `effect`, `rule`, `blockedPages`,
   `examples`) and makes "which rule blocks which bot" readable in the UI and CSV
   without special cases.
+- **Per-bot wording goes in `details.effect`.** The registry's `explanation`
+  and `howToFix` are fixed per type, so the bot-specific sentence comes from
+  the shared constant. Examples: "Gemini app answers and model training; not
+  Google Search or AI Overviews" for `Google-Extended`, or "OpenAI says this
+  fetcher may not follow robots.txt" for `ChatGPT-User`. Type copy stays
+  general.
 - **Agent discovery files** get one info row in total, with flat `present` and
   `missing` lists. No row is raised when every file is present.
 
 ### Severities (proposed; see Open questions)
 
-| Issue id                           | Level | Severity | Raised when                                                                                                                                                                              |
-| ---------------------------------- | ----- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `search-engine-crawler-blocked`    | site  | critical | `Googlebot` or `Bingbot` may not fetch the start URL or a crawled page. One row per bot.                                                                                                 |
-| `ai-answer-crawler-blocked`        | site  | warning  | An `ai_search` token, or `Google-Extended` (Gemini grounding), is blocked the same way.                                                                                                  |
-| `ai-user-fetcher-blocked`          | site  | info     | A `user_fetch` token is blocked. The copy says the vendor may not honor the rule. `Claude-User` is the exception (Anthropic says it honors robots.txt); its copy says the block applies. |
-| `ai-training-crawler-blocked`      | site  | info     | Only `training` tokens are blocked. Framed as a legitimate choice.                                                                                                                       |
-| `content-signal-opts-out-of-ai`    | site  | warning  | `ai-input=no` or `search=no` in the `*` group or an AI answer bot's group. The copy names which key and what it covers.                                                                  |
-| `missing-llms-txt`                 | site  | info     | No 2xx `/llms.txt`.                                                                                                                                                                      |
-| `llms-txt-invalid`                 | site  | info     | 2xx but an HTML body, or no leading H1. Details give the reason.                                                                                                                         |
-| `markdown-negotiation-unsupported` | site  | info     | The start URL with `Accept: text/markdown` does not return `text/markdown`.                                                                                                              |
-| `agent-discovery-files`            | site  | info     | Any checked `.well-known` file missing. Flat `present` / `missing` / `legacy` lists.                                                                                                     |
-| `invalid-structured-data`          | page  | warning  | A JSON-LD block does not parse.                                                                                                                                                          |
-| `local-business-markup-incomplete` | page  | warning  | A LocalBusiness-family entity lacks a property in the slice 2 list.                                                                                                                      |
-| `no-local-business-markup`         | site  | info     | No crawled page declares a LocalBusiness-family type. Conditional wording.                                                                                                               |
+| Issue id                           | Level | Severity | Raised when                                                                                                                                                         |
+| ---------------------------------- | ----- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `search-engine-crawler-blocked`    | site  | critical | `Googlebot` or `Bingbot` may not fetch the start URL or a crawled page. One row per bot.                                                                            |
+| `ai-answer-crawler-blocked`        | site  | warning  | An `ai_search` token, `Google-Extended` (Gemini grounding), or a `user_fetch` token whose vendor says it honors robots.txt (`Claude-User`) is blocked the same way. |
+| `ai-user-fetcher-blocked`          | site  | info     | A `user_fetch` token whose vendor says it may ignore robots.txt is blocked. The copy says the rule may have no effect.                                              |
+| `ai-training-crawler-blocked`      | site  | info     | Only `training` tokens are blocked. Framed as a legitimate choice.                                                                                                  |
+| `content-signal-opts-out-of-ai`    | site  | warning  | `ai-input=no` or `search=no` in the `*` group or an AI answer bot's group. The copy names which key and what it covers.                                             |
+| `missing-llms-txt`                 | site  | info     | No 2xx `/llms.txt`.                                                                                                                                                 |
+| `llms-txt-invalid`                 | site  | info     | 2xx but an HTML body, or no leading H1. Details give the reason.                                                                                                    |
+| `markdown-negotiation-unsupported` | site  | info     | The start URL with `Accept: text/markdown` does not return `text/markdown`.                                                                                         |
+| `agent-discovery-files`            | site  | info     | Any checked `.well-known` file missing. Flat `present` / `missing` / `legacy` lists.                                                                                |
+| `invalid-structured-data`          | page  | warning  | A JSON-LD block does not parse.                                                                                                                                     |
+| `local-business-markup-incomplete` | page  | warning  | A LocalBusiness-family entity lacks a property in the slice 2 list.                                                                                                 |
+| `no-local-business-markup`         | site  | info     | No crawled page declares a LocalBusiness-family type. Conditional wording.                                                                                          |
 
 - **Training bots.** Blocking `GPTBot`, `ClaudeBot`, `Applebot-Extended`,
   `CCBot`, `meta-externalagent`, `Amazonbot` or `MistralAI-Training` is info.
@@ -468,22 +484,31 @@ What this means for the plan:
   - Types are normalized: strip `schema:` and `http(s)://schema.org/`, then
     keep the bare name.
   - This replaces `has_structured_data`. The recommendation is to drop that
-    column in the same migration, because nothing reads it and #878 set the
-    precedent.
+    column in the same migration, because no client code, skill or doc reads
+    it and #878 set the precedent.
+  - The one consumer is `get_audit_pages`, which passes the page row through
+    `structuredContent`, so `hasStructuredData` disappears from that output.
+    The new `schemaTypes` field replaces it. Agents that check
+    `schemaTypes.length` get the same answer.
 - **New table `audit_local_businesses`,** one row per distinct LocalBusiness
   entity in an audit:
   - Columns: `id`, `audit_id`, `page_id` (first page seen, FK, cascade),
     `schema_type`, `name`, `street_address`, `address_locality`,
     `address_region`, `postal_code`, `address_country`, `telephone`, `url`,
-    `opening_hours`, `has_geo`, `same_as_count` and `page_count`.
+    `opening_hours`, `has_geo` and `same_as_count`.
   - `opening_hours` is a short normalized text summary, capped. It is a
     display value, not relational data.
   - Unique on (`audit_id`, `entity_key`), where the key is a hash of name,
     address and telephone. A footer that repeats the same markup on 500 pages
-    becomes one row with `page_count` 500.
+    becomes one row.
+  - There is deliberately no page count: an upsert that increments would
+    double-count when a crawl chunk retries. Which page wins `page_id` under
+    concurrent chunks doesn't matter; any page that carries the entity is a
+    valid example.
 - **Both tables:**
   - Written inside the crawl-chunk steps with deterministic ids and
-    insert-or-ignore (or conflict-safe upsert for `page_count`), like page rows.
+    insert-or-ignore on their unique keys, like page rows, so a retried chunk
+    writes nothing new.
   - Statements are batched under D1's parameter limit.
   - SQLite and Postgres definitions, both generated migrations and
     `schema-parity.test.ts` stay in step.
@@ -503,7 +528,11 @@ one. Done means:
 - this file's status line is updated;
 - papercuts are logged in `.agents/PAPERCUTS.md`.
 
-### Slice 1: agent-readiness site checks (about 3 days; no gate)
+### Slice 1: agent-readiness site checks (about 3 days; gated on approval of the skill edit)
+
+Gate: the `ai-visibility-audit` edit touches `.agents/skills/**`, which is
+control plane. The skill change goes in its own commit so it can be approved
+or dropped without touching the code.
 
 Spec: `0017-agent-readiness-audit-checks.md`, covering slices 1 and 2. It
 records what is checked, why each severity, and the fetch rules. It leaves out
@@ -536,6 +565,20 @@ business context and vendor study numbers.
     cross-origin redirect is not followed, a 429 stops the rest, and a body
     over the cap is not buffered.
 - **BadSEO:**
+  - **Harness.** The harness gains one "Site-level" row. Issues with
+    `pageId: null` are excluded from per-URL matching and compared with a new
+    `expectedSiteIssues` list in the fixture registry, so the homepage stays
+    clean.
+    - The coverage printout counts that list.
+    - Types that cannot fire on one origin are covered by unit tests only:
+      `llms-txt-invalid` (badseo has no llms.txt),
+      `content-signal-opts-out-of-ai` (badseo keeps its signals),
+      `ai-user-fetcher-blocked` and, after slice 2,
+      `no-local-business-markup`. The printout will list them as uncovered,
+      as it does for `crawl-rate-limited` today.
+  - Site-level rows use the checked file's URL as `pageUrl`: `/robots.txt`,
+    `/llms.txt` or the `.well-known` path. The Markdown probe is the
+    exception and uses the start URL.
   - The robots.txt gains a `Bingbot` group, an `OAI-SearchBot` group and a
     `GPTBot` group that each disallow one fixture section only. The `*` rules
     are copied into each group, because a named group replaces `*` for that
@@ -576,11 +619,13 @@ Acceptance:
   - The constant records its source version.
   - A short script regenerates it. It is not fetched at runtime.
 - **`local-business-markup-incomplete`** (page, warning; see Open questions):
-  a LocalBusiness-family entity lacks `name`, a `PostalAddress` address with at
+  raised at finalize from the deduplicated `audit_local_businesses` rows, one
+  issue per entity, with `pageId` set to the entity's stored page. Per-page
+  reporters see one page at a time and could not deduplicate. A LocalBusiness-family entity lacks `name`, a `PostalAddress` address with at
   least `streetAddress` and `addressLocality`, `telephone`, `url`, or
   `openingHoursSpecification`/`openingHours`. Details list what is missing and
-  name `geo` and `sameAs` as also recommended. The row is deduplicated per
-  entity key so a footer does not raise 500 rows.
+  name `geo` and `sameAs` as also recommended. A footer repeated on 500
+  pages raises one row.
 - **`no-local-business-markup`** (site, info): raised at finalize when no
   crawled page declares a LocalBusiness-family type. The wording is
   conditional: "If this is a local business…".
@@ -614,6 +659,9 @@ Acceptance:
   - Rows are summed per assistant: sessions, engaged sessions, key events.
   - This fits the existing input schema as one enum member, so no new tool and
     no plugin bump.
+  - Spec 0007 allows only fixed report definitions (no caller-chosen
+    dimensions or filters). This is one more fixed definition, so it fits.
+    0007's tool-definition table gets a row for it.
 - **Description.** The tool description says GA4 undercounts AI-influenced
   visits, because many arrive with no referrer and count as Direct.
 - **Tests:** one through the tool handler with a stubbed report, checking that
@@ -687,16 +735,24 @@ Options:
 Out of scope in every option: URL submission and IndexNow. IndexNow is
 upstream's "Highest priority" item.
 
-### Slice 6: `agent-readiness-audit` skill (about 2 days; after slices 1–2)
+### Slice 6: `agent-readiness-audit` skill (about 2 days; after slices 1–2; gated on approval)
+
+Gate: a new skill under `.agents/skills/**` is a control-plane change and
+needs explicit approval.
 
 - **Skill.** A shipped skill at `.agents/skills/agent-readiness-audit/`,
   created with `create-repo-skill` and mirrored by `pnpm sync-plugin-skills`.
   It follows the style of `ai-visibility-audit`.
 - **Steps:**
   1. Run or read the latest audit, and interpret the slice 1 and 2 issues.
-  2. Compare the audit's `localBusinesses` with `get_business_profile`: name,
-     address, phone, hours and website. Say that this charges credits, and ask
-     before calling.
+  2. Compare the audit's `localBusinesses` with the Business Profile: name,
+     address, phone, hours and website.
+     - Find the listing the way `local-seo` does: one `search_local_businesses`
+       call first, and `get_business_profile` only for missing hours.
+     - Say that both charge credits, and ask before calling.
+     - `local-seo` checks only the listing's website link, not the site's
+       markup against the listing, so this comparison is new rather than a
+       repeat.
   3. Tell the user to check Search Console's generative AI control. It can
      opt a site out of AI Overviews and AI Mode, and the audit cannot see it.
   4. If the user has the isitagentready.com MCP connected, call its scan tool
@@ -725,6 +781,20 @@ upstream's "Highest priority" item.
   project with `save_report_template`: name, one-line description, sections,
   tone and accent, up to 3,000 characters of instructions. Then name it when
   running the slice 6 skill.
+
+## Upstream versus fork
+
+Upstream takes issues, not PRs, so "upstream" here means the issue text we
+would post. Code stays in the fork either way.
+
+| Slice                            | Upstream route                                                  | Fork-only parts                                    |
+| -------------------------------- | --------------------------------------------------------------- | -------------------------------------------------- |
+| 1 Agent-readiness checks         | Comment on #99                                                  | None; the code is shaped so upstream could lift it |
+| 2 Structured data, LocalBusiness | New issue "Check local business markup in site audits"          | None                                               |
+| 3 GA4 AI referrals               | New issue "Show traffic from AI assistants in Google Analytics" | None                                               |
+| 4 Repeated sampling              | New issue "AI visibility answers change between runs"           | None                                               |
+| 5 Bing                           | None: #232 and #411 already exist                               | Only if you choose option (b) or (c)               |
+| 6 Skill                          | None for now; it depends on 1 and 2 landing upstream            | The Spanish-language prompt pack, always           |
 
 ## Issue drafts
 
