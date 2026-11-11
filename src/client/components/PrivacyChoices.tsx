@@ -107,7 +107,11 @@ export function PrivacyBootstrap() {
   const organizationId = getActiveOrganizationId(session);
   const previousUserIdRef = React.useRef<string | null>(null);
 
-  const analytics = choices?.analytics;
+  // Outside OpenSEO Cloud there is no consent UI: a self-host that sets its own
+  // PostHog key owns that choice, so capture runs unless the browser sends GPC.
+  const analytics = isHostedClientAuthMode()
+    ? choices?.analytics
+    : !hasGlobalPrivacyControl();
   // Replay records signed-in users only, and only after they agreed to Terms
   // that disclose it: the signup clickwrap or the updated-Terms prompt both
   // record termsAcceptedAt. Older accounts are asked again before recording.

@@ -1,4 +1,3 @@
-import { isHostedClientAuthMode } from "@/lib/auth-mode";
 import {
   sanitizePostHogEvent,
   sanitizePostHogUrl,
@@ -65,7 +64,8 @@ function isIgnorableException(
 }
 
 function getBrowserPostHogClient(): Promise<BrowserPostHogClient | null> {
-  if (typeof window === "undefined" || !isHostedClientAuthMode()) {
+  // Any mode with a key set: OpenSEO Cloud, or a self-host's own project.
+  if (typeof window === "undefined") {
     return Promise.resolve(null);
   }
 
