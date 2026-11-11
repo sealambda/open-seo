@@ -1,24 +1,29 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { CardShell } from "@/client/components/CardShell";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/client/components/ui/table";
+import type { ChartConfig } from "@/client/components/ui/chart";
 import { BingConnectionCard } from "@/client/features/integrations/BingConnectionCard";
 import { BingWebmasterLogo } from "@/client/features/integrations/BingWebmasterLogo";
 import { getBingSummary } from "@/serverFunctions/bing";
-import { moreDetailsClass } from "@/client/features/dashboard/cardParts";
-import { MetricsSkeleton } from "@/client/features/dashboard/DashboardMetrics";
+import {
+  cardMetaClass,
+  moreDetailsClass,
+} from "@/client/features/dashboard/cardParts";
+import {
+  MetricRow,
+  MetricsSkeleton,
+  TrendChart,
+} from "@/client/features/dashboard/DashboardMetrics";
 import {
   formatCount,
   formatCtr,
   formatPosition,
 } from "@/client/features/search-performance/SearchPerformanceColumns";
+
+const bingChartConfig = {
+  clicks: { label: "Clicks", color: "var(--chart-1)" },
+  impressions: { label: "Impressions", color: "var(--chart-2)" },
+} satisfies ChartConfig;
 
 export function BingCard({
   projectId,
@@ -52,8 +57,13 @@ export function BingCard({
 
   return (
     <CardShell
-      title="Bing Webmaster Tools Performance"
+      title="Bing"
       icon={<BingWebmasterLogo className="size-5" />}
+      titleInfo={
+        days === null ? undefined : (
+          <span className={cardMetaClass}>Last {days} days</span>
+        )
+      }
       action={
         <Link
           to="/p/$projectId/search-performance"
@@ -61,19 +71,15 @@ export function BingCard({
           search={{ source: "bing" }}
           className={moreDetailsClass}
         >
-          View Bing insights →
+          View Bing insights
         </Link>
       }
     >
-      <p className="mb-4 text-sm font-medium text-muted-foreground">
-        Bing Webmaster Tools
-        {days === null ? "" : ` · Last ${days} days`}
-      </p>
       {summaryQuery.isError ? (
         <p className="text-sm text-muted-foreground">
           Couldn&rsquo;t load Bing data. Try again shortly.
         </p>
-      ) : !summaryData ? (
+      ) : !summaryData?.connected ? (
         <MetricsSkeleton />
       ) : !total ? (
         <p className="text-sm text-muted-foreground">
@@ -81,38 +87,39 @@ export function BingCard({
           is verified.
         </p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Metric</TableHead>
-              <TableHead className="text-right">Value</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[
-              { label: "Clicks", value: formatCount(total.clicks) },
+        <div className="flex flex-1 flex-col gap-4">
+          {/* Bing reports one window with no earlier period to compare to. */}
+          <MetricRow
+            metrics={[
+              {
+                label: "Clicks",
+                value: formatCount(total.clicks),
+                change: null,
+                dotClass: "bg-chart-1",
+              },
               {
                 label: "Impressions",
                 value: formatCount(total.impressions),
+                change: null,
+                dotClass: "bg-chart-2",
               },
-              { label: "Click-through rate", value: formatCtr(total.ctr) },
+              {
+                label: "Click-through rate",
+                value: formatCtr(total.ctr),
+                change: null,
+              },
               {
                 label: "Average position",
                 value:
                   total.position === undefined
                     ? "—"
                     : formatPosition(total.position),
+                change: null,
               },
-            ].map((metric) => (
-              <TableRow key={metric.label}>
-                <TableCell>{metric.label}</TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {metric.value}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            ]}
+          />
+          <TrendChart config={bingChartConfig} data={summaryData.trend} />
+        </div>
       )}
     </CardShell>
   );
