@@ -1,9 +1,8 @@
 import { env } from "cloudflare:workers";
 import { PostHog } from "posthog-node";
 import { asAppError } from "@/server/lib/errors";
-import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 
-/** Returns a one-shot PostHog client, or null if the key is missing. Caller must shut down after use.
+/** Returns a one-shot PostHog client, or null if the key is missing (any auth mode: OpenSEO Cloud or a self-host's own project). Caller must shut down after use.
  *  A new instance per call is fine — this runs on Cloudflare Workers where construction cost is negligible. */
 function getServerPostHogClient(): PostHog | null {
   const apiKey = env.POSTHOG_PUBLIC_KEY?.trim();
@@ -76,10 +75,6 @@ export async function captureServerError(
   properties: Record<string, string | null | undefined> = {},
   distinctId?: string,
 ) {
-  if (!(await isHostedServerAuthMode())) {
-    return;
-  }
-
   const client = getServerPostHogClient();
   if (!client) return;
 
@@ -102,10 +97,6 @@ export async function captureServerEvent(args: {
   /** Null only before the user has an organization (sign-up). */
   organizationId: string | null;
 }) {
-  if (!(await isHostedServerAuthMode())) {
-    return;
-  }
-
   const client = getServerPostHogClient();
   if (!client) return;
 

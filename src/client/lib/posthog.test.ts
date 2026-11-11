@@ -10,7 +10,6 @@ const client = vi.hoisted(() => ({
 }));
 
 vi.mock("posthog-js", () => ({ default: client }));
-vi.mock("@/lib/auth-mode", () => ({ isHostedClientAuthMode: () => true }));
 
 // The module keeps the capture state for the page's lifetime, so each test
 // loads a fresh copy.

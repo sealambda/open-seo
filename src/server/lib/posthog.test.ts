@@ -8,9 +8,6 @@ const { captureExceptionImmediate } = vi.hoisted(() => ({
 vi.mock("cloudflare:workers", () => ({
   env: { POSTHOG_PUBLIC_KEY: "phc_test", POSTHOG_HOST: "https://ph.test" },
 }));
-vi.mock("@/server/lib/runtime-env", () => ({
-  isHostedServerAuthMode: async () => true,
-}));
 vi.mock("posthog-node", () => ({
   PostHog: class {
     captureExceptionImmediate = captureExceptionImmediate;
