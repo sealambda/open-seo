@@ -1,16 +1,24 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { bingConnections } from "@/db/schema";
+import { connectorIsMember } from "@/server/features/google/connectorIsMember";
 
 export type BingConnection = typeof bingConnections.$inferSelect;
 
+/** The project's connection, while the member who made it is still in the
+ *  organization (see connectorIsMember). */
 async function getByProjectId(
   projectId: string,
 ): Promise<BingConnection | null> {
   const rows = await db
     .select()
     .from(bingConnections)
-    .where(eq(bingConnections.projectId, projectId))
+    .where(
+      and(
+        eq(bingConnections.projectId, projectId),
+        await connectorIsMember(bingConnections),
+      ),
+    )
     .limit(1);
   return rows[0] ?? null;
 }

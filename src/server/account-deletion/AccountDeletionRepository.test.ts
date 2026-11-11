@@ -70,6 +70,10 @@ beforeEach(() => {
       ('p-shared', 'org-shared', 'Shared project');
     INSERT INTO reports (id, project_id, title, summary, html, created_by, created_by_user_id, size_bytes, share_token) VALUES
       ('r-shared', 'p-shared', 'Report', '', '', 'user', 'alice', 0, 'token');
+    INSERT INTO bing_credentials (id, user_id, api_key, key_last4) VALUES
+      ('k-alice', 'alice', 'ciphertext', 'abcd');
+    INSERT INTO bing_connections (id, project_id, organization_id, site_url, connected_by_user_id, credential_id) VALUES
+      ('b-key', 'p-shared', 'org-shared', 'https://example.com/', 'alice', 'k-alice');
     INSERT INTO account_deletion_requests (user_id, requested_at, delete_after) VALUES
       ('alice', '2026-11-01T00:00:00.000Z', '2026-11-15T00:00:00.000Z');
   `);
@@ -100,6 +104,9 @@ describe("account erasure", () => {
       query("SELECT created_by_user_id, share_token FROM reports"),
     ).toEqual([{ created_by_user_id: "gdpr-deleted-user", share_token: null }]);
     expect(query("SELECT * FROM account_deletion_requests")).toEqual([]);
+    // Bing rows have no user foreign key, so nothing cascades to them.
+    expect(query("SELECT id FROM bing_credentials")).toEqual([]);
+    expect(query("SELECT id FROM bing_connections")).toEqual([]);
   });
 
   it("doesn't revoke a Google account another user also connected", async () => {

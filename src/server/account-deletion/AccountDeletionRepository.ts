@@ -21,6 +21,8 @@ import {
   apikey,
   auditLighthouseResults,
   audits,
+  bingConnections,
+  bingCredentials,
   ga4Connections,
   gscConnections,
   invitation,
@@ -344,6 +346,11 @@ async function eraseUser(input: {
     tx
       .delete(ga4Connections)
       .where(eq(ga4Connections.connectedByUserId, userId)),
+    // Likewise their Bing connections and stored Bing API keys.
+    tx
+      .delete(bingConnections)
+      .where(eq(bingConnections.connectedByUserId, userId)),
+    tx.delete(bingCredentials).where(eq(bingCredentials.userId, userId)),
     tx.delete(apikey).where(eq(apikey.referenceId, userId)),
     tx
       .update(audits)

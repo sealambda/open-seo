@@ -45,6 +45,11 @@ export const EXCLUDED_TABLES = new Set([
   // on the Gateway.
   "gsc_connections",
   "ga4_connections",
+  // Bing API keys are encrypted with this install's BETTER_AUTH_SECRET and
+  // its OAuth grants live in `account`. Members connect Bing again on the
+  // Gateway.
+  "bing_credentials",
+  "bing_connections",
   // Shopify crawler signatures, encrypted with this install's
   // CRAWLER_ACCESS_SECRET.
   "crawler_credentials",

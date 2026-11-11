@@ -1,6 +1,11 @@
 import { and, eq, exists, type SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { member, type ga4Connections, type gscConnections } from "@/db/schema";
+import {
+  member,
+  type bingConnections,
+  type ga4Connections,
+  type gscConnections,
+} from "@/db/schema";
 import { usesBetterAuthServer } from "@/server/lib/runtime-env";
 
 /**
@@ -13,7 +18,11 @@ import { usesBetterAuthServer } from "@/server/lib/runtime-env";
  * Access, Every App) have nobody to leave, so they filter nothing.
  */
 export async function connectorIsMember(
-  connections: typeof gscConnections | typeof ga4Connections,
+  // Bing connections read through the member's key or grant the same way.
+  connections:
+    | typeof gscConnections
+    | typeof ga4Connections
+    | typeof bingConnections,
 ): Promise<SQL | undefined> {
   if (!(await usesBetterAuthServer())) return undefined;
   return exists(
