@@ -67,6 +67,7 @@ to `upstream/main`, locally and on `origin`.
 | --- | --- |
 | `drizzle/*/meta/_journal.json`, `*_snapshot.json`, numbered `.sql` | Never text-merge. See "Migrations" below. |
 | `plugins/openseo/.*-plugin/plugin.json` version | Take main's files, then set all three to one patch above main's version if the fork adds MCP tools or shipped skills. |
+| `plugins/openseo/.mcp.json` URL | Keep the fork's self-host URL. The `sealambda` marketplace installs this plugin from `sealambda/main`, and only the self-host server has the fork's tools. |
 | `src/server/everyapp/tools.test.ts` tool count | Main's count plus the fork's tools. Shows up as a failing test, not a conflict. |
 | `.agents/PAPERCUTS.md`, env examples, `deploy/alchemy/alchemy.run.ts` | Keep both sides. |
 | Routes and pages upstream restructured | Take upstream's structure and re-insert the fork's component in it. Do not keep the fork's stale copy of the surrounding page. |
